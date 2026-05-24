@@ -5,10 +5,26 @@ import UIKit
 import UniformTypeIdentifiers
 
 enum AppTheme {
-    static let accent = Color(red: 0.72, green: 0.10, blue: 0.12)
-    static let accentSoft = Color(red: 0.72, green: 0.10, blue: 0.12).opacity(0.10)
-    static let accentStroke = Color(red: 0.72, green: 0.10, blue: 0.12).opacity(0.34)
-    static let warmSurface = Color(red: 0.98, green: 0.95, blue: 0.93)
+    static let accent = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 1)
+            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 1)
+    })
+    static let accentSoft = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 0.18)
+            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 0.10)
+    })
+    static let accentStroke = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 0.46)
+            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 0.34)
+    })
+    static let textCardSurface = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.20, green: 0.08, blue: 0.08, alpha: 1)
+            : UIColor(red: 0.99, green: 0.92, blue: 0.90, alpha: 1)
+    })
 }
 
 struct AppView: View {
@@ -49,7 +65,7 @@ struct AppView: View {
                         deleteSession: viewModel.deleteSession,
                         toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:)
                     )
-                    .navigationTitle("中文動画ノート")
+                    .navigationTitle("PinyinFlow")
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button {
@@ -119,7 +135,6 @@ struct AppView: View {
         .onChange(of: transcriptionEngine) { _, newValue in
             configureViewModelServices(transcriptionEngine: newValue)
         }
-        .tint(AppTheme.accent)
     }
 
     private func configurePlaybackAudioSession() {
@@ -276,7 +291,6 @@ private struct ImportHomeView: View {
         }
         .searchable(text: $searchText, prompt: "中国語・拼音・翻訳を検索")
         .background(Color(.systemGroupedBackground))
-        .tint(AppTheme.accent)
         .sheet(isPresented: $isShowingLinkSheet) {
             LinkImportSheet(linkText: $linkText) { link in
                 importFromLink(link)
@@ -367,10 +381,10 @@ private struct ImportActionLabel: View {
         .foregroundStyle(.primary)
         .frame(maxWidth: .infinity)
         .frame(height: 62)
-        .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 8))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
-                .stroke(AppTheme.accentStroke, lineWidth: 1)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         }
     }
 }
@@ -606,11 +620,11 @@ private struct HistoryPreview: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(8)
-            .background(AppTheme.warmSurface)
+            .background(AppTheme.textCardSurface)
         } else if session.isAudioOnly {
             ZStack(alignment: .bottomTrailing) {
                 Rectangle()
-                    .fill(AppTheme.warmSurface)
+                    .fill(AppTheme.textCardSurface)
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 34, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
@@ -691,9 +705,9 @@ private struct VideoThumbnailView: View {
                     .scaledToFill()
             } else {
                 Rectangle()
-                    .fill(AppTheme.warmSurface)
+                    .fill(Color(.tertiarySystemFill))
                 Image(systemName: "movie")
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(.secondary)
             }
 
             if durationText != "0:00" {

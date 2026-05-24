@@ -20,7 +20,8 @@ struct TranscriptWorkspaceView: View {
             VideoPane(
                 player: player,
                 mediaURL: viewModel.selectedVideoURL,
-                isTextOnly: viewModel.isTextOnlySession
+                isTextOnly: viewModel.isTextOnlySession,
+                isProcessing: viewModel.phase.isBusy
             )
                 .frame(maxWidth: .infinity)
                 .frame(height: 360)
@@ -84,6 +85,9 @@ struct TranscriptWorkspaceView: View {
         .onChange(of: viewModel.selectedVideoURL) { _, url in
             configurePlayer(for: url)
         }
+        .onChange(of: viewModel.phase) { _, _ in
+            configurePlayer(for: viewModel.selectedVideoURL)
+        }
         .onChange(of: playbackRate) { _, newValue in
             player?.defaultRate = Float(newValue)
             if player?.timeControlStatus == .playing {
@@ -98,6 +102,11 @@ struct TranscriptWorkspaceView: View {
     private func configurePlayer(for url: URL?) {
         removeTimeObserver()
         currentTime = 0
+
+        guard viewModel.phase.isBusy == false else {
+            player = nil
+            return
+        }
 
         guard let url else {
             player = nil
@@ -145,10 +154,13 @@ private struct VideoPane: View {
     let player: AVPlayer?
     let mediaURL: URL?
     let isTextOnly: Bool
+    let isProcessing: Bool
 
     var body: some View {
         Group {
-            if isTextOnly {
+            if isProcessing {
+                ProcessingMediaPane()
+            } else if isTextOnly {
                 MediaIconPane(systemName: "text.quote")
             } else if mediaURL?.isStandaloneAudioFile == true {
                 MediaIconPane(systemName: "waveform.circle.fill")
@@ -158,6 +170,28 @@ private struct VideoPane: View {
                 MediaIconPane(systemName: "movie.badge.waveform")
             }
         }
+    }
+}
+
+private struct ProcessingMediaPane: View {
+    var body: some View {
+        VStack(spacing: 18) {
+            ProgressView()
+                .controlSize(.large)
+                .tint(AppTheme.accent)
+            VStack(spacing: 6) {
+                Text("処理中")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Text("字幕を準備しています")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.68))
+            }
+            WaitingAdSlotView(style: .dark)
+                .frame(maxWidth: 340)
+                .padding(.horizontal, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -265,7 +299,7 @@ private struct ProcessingSkeletonView: View {
                 .padding(.vertical, 4)
             }
 
-            WaitingAdSlotView()
+            WaitingAdSlotView(style: .light)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(pulse ? 0.45 : 1)
@@ -279,25 +313,32 @@ private struct ProcessingSkeletonView: View {
 }
 
 private struct WaitingAdSlotView: View {
+    enum Style {
+        case light
+        case dark
+    }
+
+    let style: Style
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("広告")
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(style == .dark ? .white.opacity(0.62) : .secondary)
             RoundedRectangle(cornerRadius: 8)
-                .fill(AppTheme.accentSoft)
+                .fill(style == .dark ? Color.white.opacity(0.08) : AppTheme.accentSoft)
                 .overlay {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles.rectangle.stack")
                         Text("処理中に広告を表示するスペース")
                     }
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(style == .dark ? Color.white.opacity(0.82) : AppTheme.accent)
                 }
                 .frame(height: 72)
                 .overlay {
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(AppTheme.accentStroke, lineWidth: 1)
+                        .stroke(style == .dark ? Color.white.opacity(0.14) : AppTheme.accentStroke, lineWidth: 1)
                 }
         }
         .padding(.top, 4)
