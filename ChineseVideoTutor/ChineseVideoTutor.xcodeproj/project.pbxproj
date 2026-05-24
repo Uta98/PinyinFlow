@@ -1,0 +1,416 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A0001010000000000000000 /* ChineseVideoTutorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000010000000000000000 /* ChineseVideoTutorApp.swift */; };
+		0A0001020000000000000000 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000020000000000000000 /* AppView.swift */; };
+		0A0001030000000000000000 /* Features/TranscriptWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */; };
+		0A0001040000000000000000 /* Features/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000040000000000000000 /* Features/SettingsView.swift */; };
+		0A0001050000000000000000 /* Features/FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000050000000000000000 /* Features/FlowLayout.swift */; };
+		0A0001060000000000000000 /* Models/TranscriptSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000060000000000000000 /* Models/TranscriptSegment.swift */; };
+		0A0001070000000000000000 /* Services/TranscriptionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */; };
+		0A0001080000000000000000 /* Services/FileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000080000000000000000 /* Services/FileImporter.swift */; };
+		0A0001090000000000000000 /* Services/AudioExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000090000000000000000 /* Services/AudioExtractor.swift */; };
+		0A00010A0000000000000000 /* Services/SpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000A0000000000000000 /* Services/SpeechTranscriber.swift */; };
+		0A00010B0000000000000000 /* Services/PinyinAnnotator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000B0000000000000000 /* Services/PinyinAnnotator.swift */; };
+		0A00010C0000000000000000 /* Services/TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000C0000000000000000 /* Services/TranslationService.swift */; };
+		0A00010D0000000000000000 /* Services/AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000D0000000000000000 /* Services/AppError.swift */; };
+		0A00010F0000000000000000 /* Services/LinkVideoImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */; };
+		0A0001100000000000000000 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000100000000000000000 /* PrivacyInfo.xcprivacy */; };
+		0A00010E0000000000000000 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000B10000000000000000 /* WhisperKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A0000010000000000000000 /* ChineseVideoTutorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChineseVideoTutorApp.swift; sourceTree = "<group>"; };
+		0A0000020000000000000000 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
+		0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TranscriptWorkspaceView.swift; sourceTree = "<group>"; };
+		0A0000040000000000000000 /* Features/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/SettingsView.swift; sourceTree = "<group>"; };
+		0A0000050000000000000000 /* Features/FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/FlowLayout.swift; sourceTree = "<group>"; };
+		0A0000060000000000000000 /* Models/TranscriptSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TranscriptSegment.swift; sourceTree = "<group>"; };
+		0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TranscriptionViewModel.swift; sourceTree = "<group>"; };
+		0A0000080000000000000000 /* Services/FileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FileImporter.swift; sourceTree = "<group>"; };
+		0A0000090000000000000000 /* Services/AudioExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExtractor.swift; sourceTree = "<group>"; };
+		0A00000A0000000000000000 /* Services/SpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SpeechTranscriber.swift; sourceTree = "<group>"; };
+		0A00000B0000000000000000 /* Services/PinyinAnnotator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/PinyinAnnotator.swift; sourceTree = "<group>"; };
+		0A00000C0000000000000000 /* Services/TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TranslationService.swift; sourceTree = "<group>"; };
+		0A00000D0000000000000000 /* Services/AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppError.swift; sourceTree = "<group>"; };
+		0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LinkVideoImporter.swift; sourceTree = "<group>"; };
+		0A0000100000000000000000 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		0A0000200000000000000000 /* ChineseVideoTutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChineseVideoTutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0A0000300000000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A00010E0000000000000000 /* WhisperKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A0000400000000000000000 = {
+			isa = PBXGroup;
+			children = (
+				0A0000410000000000000000 /* ChineseVideoTutor */,
+				0A0000420000000000000000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0A0000410000000000000000 /* ChineseVideoTutor */ = {
+			isa = PBXGroup;
+			children = (
+				0A0000010000000000000000 /* ChineseVideoTutorApp.swift */,
+				0A0000020000000000000000 /* AppView.swift */,
+				0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */,
+				0A0000040000000000000000 /* Features/SettingsView.swift */,
+				0A0000050000000000000000 /* Features/FlowLayout.swift */,
+				0A0000060000000000000000 /* Models/TranscriptSegment.swift */,
+				0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */,
+				0A0000080000000000000000 /* Services/FileImporter.swift */,
+				0A0000090000000000000000 /* Services/AudioExtractor.swift */,
+				0A00000A0000000000000000 /* Services/SpeechTranscriber.swift */,
+				0A00000B0000000000000000 /* Services/PinyinAnnotator.swift */,
+				0A00000C0000000000000000 /* Services/TranslationService.swift */,
+				0A00000D0000000000000000 /* Services/AppError.swift */,
+				0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */,
+				0A0000100000000000000000 /* PrivacyInfo.xcprivacy */,
+			);
+			path = ChineseVideoTutor;
+			sourceTree = "<group>";
+		};
+		0A0000420000000000000000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0A0000200000000000000000 /* ChineseVideoTutor.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0A0000500000000000000000 /* ChineseVideoTutor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A0000800000000000000000 /* Build configuration list for PBXNativeTarget "ChineseVideoTutor" */;
+			buildPhases = (
+				0A0000600000000000000000 /* Sources */,
+				0A0000300000000000000000 /* Frameworks */,
+				0A0000700000000000000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ChineseVideoTutor;
+			packageProductDependencies = (
+				0A0000B10000000000000000 /* WhisperKit */,
+			);
+			productName = ChineseVideoTutor;
+			productReference = 0A0000200000000000000000 /* ChineseVideoTutor.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A0000900000000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					0A0000500000000000000000 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 0A0000910000000000000000 /* Build configuration list for PBXProject "ChineseVideoTutor" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ja,
+				en,
+				Base,
+			);
+			mainGroup = 0A0000400000000000000000;
+			packageReferences = (
+				0A0000B00000000000000000 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */,
+			);
+			productRefGroup = 0A0000420000000000000000 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0A0000500000000000000000 /* ChineseVideoTutor */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0A0000700000000000000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A0001100000000000000000 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0A0000600000000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A0001010000000000000000 /* ChineseVideoTutorApp.swift in Sources */,
+				0A0001020000000000000000 /* AppView.swift in Sources */,
+				0A0001030000000000000000 /* Features/TranscriptWorkspaceView.swift in Sources */,
+				0A0001040000000000000000 /* Features/SettingsView.swift in Sources */,
+				0A0001050000000000000000 /* Features/FlowLayout.swift in Sources */,
+				0A0001060000000000000000 /* Models/TranscriptSegment.swift in Sources */,
+				0A0001070000000000000000 /* Services/TranscriptionViewModel.swift in Sources */,
+				0A0001080000000000000000 /* Services/FileImporter.swift in Sources */,
+				0A0001090000000000000000 /* Services/AudioExtractor.swift in Sources */,
+				0A00010A0000000000000000 /* Services/SpeechTranscriber.swift in Sources */,
+				0A00010B0000000000000000 /* Services/PinyinAnnotator.swift in Sources */,
+				0A00010C0000000000000000 /* Services/TranslationService.swift in Sources */,
+				0A00010D0000000000000000 /* Services/AppError.swift in Sources */,
+				0A00010F0000000000000000 /* Services/LinkVideoImporter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0A0000810000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4M595X53A7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "中文動画ノート";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.ChineseVideoTutor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0A0000820000000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4M595X53A7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "中文動画ノート";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.ChineseVideoTutor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		0A0000920000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		0A0000930000000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A0000800000000000000000 /* Build configuration list for PBXNativeTarget "ChineseVideoTutor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A0000810000000000000000 /* Debug */,
+				0A0000820000000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0A0000910000000000000000 /* Build configuration list for PBXProject "ChineseVideoTutor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A0000920000000000000000 /* Debug */,
+				0A0000930000000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0A0000B00000000000000000 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/argmax-oss-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0A0000B10000000000000000 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A0000B00000000000000000 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */;
+			productName = WhisperKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 0A0000900000000000000000 /* Project object */;
+}
