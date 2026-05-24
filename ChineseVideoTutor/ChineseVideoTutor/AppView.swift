@@ -46,14 +46,9 @@ struct AppView: View {
                 NavigationStack {
                     ImportHomeView(
                         history: viewModel.history,
+                        textScale: textScale,
                         importFromFiles: { isImportingVideo = true },
                         selectedPhotoItem: $selectedPhotoItem,
-                        importFromLink: { link in
-                            Task {
-                                viewModel.prepareImportingPlaceholder(name: "XiaoHongShu")
-                                await viewModel.importVideo(fromLink: link)
-                            }
-                        },
                         importText: { text in
                             Task {
                                 await viewModel.importText(text)
@@ -165,17 +160,15 @@ struct AppView: View {
 
 private struct ImportHomeView: View {
     let history: [TranscriptSession]
+    let textScale: Double
     let importFromFiles: () -> Void
     @Binding var selectedPhotoItem: PhotosPickerItem?
-    let importFromLink: (String) -> Void
     let importText: (String) -> Void
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let deleteSession: (TranscriptSession) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
     @State private var searchText = ""
-    @State private var linkText = ""
     @State private var inputText = ""
-    @State private var isShowingLinkSheet = false
     @State private var isShowingTextSheet = false
     @State private var sessionPendingDeletion: TranscriptSession?
     @State private var selectedMenu: MainMenu = .history
@@ -226,7 +219,6 @@ private struct ImportHomeView: View {
                 ImportActions(
                     importFromFiles: importFromFiles,
                     selectedPhotoItem: $selectedPhotoItem,
-                    showLinkInput: { isShowingLinkSheet = true },
                     showTextInput: { isShowingTextSheet = true }
                 )
 
@@ -238,7 +230,7 @@ private struct ImportHomeView: View {
                 .pickerStyle(.segmented)
 
                 if selectedMenu == .favorites {
-                    FavoriteSubtitleList(results: favoriteResults) { result in
+                    FavoriteSubtitleList(results: favoriteResults, textScale: textScale) { result in
                         openSession(result.session, result.segment.startTime)
                     } toggleFavorite: { result in
                         toggleFavorite(result.session.id, result.segment.id)
@@ -291,12 +283,6 @@ private struct ImportHomeView: View {
         }
         .searchable(text: $searchText, prompt: "中国語・拼音・翻訳を検索")
         .background(Color(.systemGroupedBackground))
-        .sheet(isPresented: $isShowingLinkSheet) {
-            LinkImportSheet(linkText: $linkText) { link in
-                importFromLink(link)
-                linkText = ""
-            }
-        }
         .sheet(isPresented: $isShowingTextSheet) {
             TextImportSheet(inputText: $inputText) { text in
                 importText(text)
@@ -329,7 +315,6 @@ private struct ImportHomeView: View {
 private struct ImportActions: View {
     let importFromFiles: () -> Void
     @Binding var selectedPhotoItem: PhotosPickerItem?
-    let showLinkInput: () -> Void
     let showTextInput: () -> Void
 
     var body: some View {
@@ -342,10 +327,6 @@ private struct ImportActions: View {
                 ImportActionLabel(title: "写真", systemImage: "photo.on.rectangle")
             }
             .buttonStyle(.plain)
-
-            ImportActionButton(title: "リンク", systemImage: "link") {
-                showLinkInput()
-            }
 
             ImportActionButton(title: "テキスト", systemImage: "text.quote") {
                 showTextInput()
@@ -433,50 +414,6 @@ private struct TextImportSheet: View {
     }
 }
 
-private struct LinkImportSheet: View {
-    @Binding var linkText: String
-    let importLink: (String) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    private var canImport: Bool {
-        linkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("XiaoHongShuリンク") {
-                    TextField("共有リンクまたは動画URL", text: $linkText, axis: .vertical)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .lineLimit(3...6)
-
-                    Button {
-                        linkText = UIPasteboard.general.string ?? linkText
-                    } label: {
-                        Label("貼り付け", systemImage: "doc.on.clipboard")
-                    }
-                }
-            }
-            .navigationTitle("リンクから取り込み")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("取り込む") {
-                        importLink(linkText)
-                        dismiss()
-                    }
-                    .disabled(canImport == false)
-                }
-            }
-        }
-    }
-}
-
 private struct HistorySearchResult: Identifiable {
     var id: String { "\(session.id)-\(segment.id)" }
     var session: TranscriptSession
@@ -492,6 +429,7 @@ private struct FavoriteSubtitleResult: Identifiable {
 
 private struct FavoriteSubtitleList: View {
     let results: [FavoriteSubtitleResult]
+    let textScale: Double
     let open: (FavoriteSubtitleResult) -> Void
     let toggleFavorite: (FavoriteSubtitleResult) -> Void
 
@@ -506,7 +444,7 @@ private struct FavoriteSubtitleList: View {
                 .padding(.top, 40)
             } else {
                 ForEach(results) { result in
-                    FavoriteSubtitleRow(result: result) {
+                    FavoriteSubtitleRow(result: result, textScale: textScale) {
                         open(result)
                     } toggleFavorite: {
                         toggleFavorite(result)
@@ -519,6 +457,7 @@ private struct FavoriteSubtitleList: View {
 
 private struct FavoriteSubtitleRow: View {
     let result: FavoriteSubtitleResult
+    let textScale: Double
     let open: () -> Void
     let toggleFavorite: () -> Void
 
@@ -539,10 +478,10 @@ private struct FavoriteSubtitleRow: View {
                 open()
             } label: {
                 VStack(alignment: .leading, spacing: 8) {
-                    PinyinFlow(tokens: result.segment.pinyinTokens, textScale: 0.78)
+                    PinyinFlow(tokens: result.segment.pinyinTokens, textScale: 0.78 * textScale)
                     if result.segment.japaneseTranslation.isEmpty == false {
                         Text(TranscriptTextCleaner.clean(result.segment.japaneseTranslation))
-                            .font(.subheadline)
+                            .font(.system(size: 15 * textScale))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -598,6 +537,7 @@ private struct HistoryTile: View {
                 .aspectRatio(9.0 / 16.0, contentMode: .fit)
                 .overlay {
                     HistoryPreview(session: session)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .clipped()

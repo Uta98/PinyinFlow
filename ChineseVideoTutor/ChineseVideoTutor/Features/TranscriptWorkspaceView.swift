@@ -78,6 +78,15 @@ struct TranscriptWorkspaceView: View {
         }
         .background(Color(.systemGroupedBackground))
         .tint(AppTheme.accent)
+        .overlay(alignment: .bottom) {
+            if viewModel.phase.isBusy {
+                WaitingAdSlotView(style: .light)
+                    .frame(maxWidth: 340)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 18)
+                    .allowsHitTesting(false)
+            }
+        }
         .onAppear {
             pendingInitialSeek = viewModel.initialPlaybackTime
             configurePlayer(for: viewModel.selectedVideoURL)
@@ -198,10 +207,6 @@ private struct ProcessingMediaPane: View {
                         .foregroundStyle(.white.opacity(0.68))
                 }
             }
-
-            WaitingAdSlotView(style: .dark)
-                .frame(maxWidth: 380)
-                .padding(.horizontal, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -333,8 +338,6 @@ private struct ProcessingSkeletonView: View {
                 }
                 .padding(.vertical, 4)
             }
-
-            WaitingAdSlotView(style: .light)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(pulse ? 0.45 : 1)

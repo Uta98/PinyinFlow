@@ -18,7 +18,7 @@ struct SettingsView: View {
     ]
 
     private let textSizes: [(label: String, value: Double)] = [
-        ("小", 0.85),
+        ("小", 0.92),
         ("中", 1.0),
         ("大", 1.2)
     ]
@@ -64,8 +64,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Text("DeepLはAPIキーを使って翻訳します。iOS純正翻訳は端末の対応状況と言語モデルに依存します。")
-                        .foregroundStyle(.secondary)
+                    SettingsDescriptionText("DeepLはAPIキーを使って翻訳します。iOS純正翻訳は端末の対応状況と言語モデルに依存します。")
                 }
 
                 Section("文字起こしツール") {
@@ -85,8 +84,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Text("WhisperKitは端末内で文字起こしします。iOS純正はSpeechフレームワークを使うため、音声認識の許可と端末/言語の対応状況に依存します。")
-                        .foregroundStyle(.secondary)
+                    SettingsDescriptionText("WhisperKitは端末内で文字起こしします。iOS純正はSpeechフレームワークを使うため、音声認識の許可と端末/言語の対応状況に依存します。")
                 }
 
                 Section("表示") {
@@ -125,6 +123,21 @@ struct SettingsView: View {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         return "\(version) (\(build))"
+    }
+}
+
+private struct SettingsDescriptionText: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .listRowBackground(Color(.systemGroupedBackground))
     }
 }
 
