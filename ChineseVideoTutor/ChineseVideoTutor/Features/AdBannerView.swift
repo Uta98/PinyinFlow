@@ -2,6 +2,17 @@ import GoogleMobileAds
 import SwiftUI
 import UIKit
 
+@MainActor
+private enum AdMobRuntime {
+    private static var didStart = false
+
+    static func startIfNeeded() {
+        guard didStart == false else { return }
+        didStart = true
+        MobileAds.shared.start()
+    }
+}
+
 struct AdBannerView: UIViewControllerRepresentable {
     let adUnitID: String
 
@@ -40,6 +51,7 @@ final class BannerViewController: UIViewController {
     func loadAdIfNeeded() {
         guard didLoadAd == false, adUnitID.isEmpty == false, isViewLoaded else { return }
         didLoadAd = true
+        AdMobRuntime.startIfNeeded()
         bannerView.adUnitID = adUnitID
         bannerView.rootViewController = self
         bannerView.load(Request())

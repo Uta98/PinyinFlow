@@ -12,7 +12,6 @@
 		0A0001030000000000000000 /* Features/TranscriptWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */; };
 		0A0001040000000000000000 /* Features/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000040000000000000000 /* Features/SettingsView.swift */; };
 		0A0001050000000000000000 /* Features/FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000050000000000000000 /* Features/FlowLayout.swift */; };
-		0A0001140000000000000000 /* Features/AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000140000000000000000 /* Features/AdBannerView.swift */; };
 		0A0001060000000000000000 /* Models/TranscriptSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000060000000000000000 /* Models/TranscriptSegment.swift */; };
 		0A0001070000000000000000 /* Services/TranscriptionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */; };
 		0A0001080000000000000000 /* Services/FileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000080000000000000000 /* Services/FileImporter.swift */; };
@@ -21,11 +20,12 @@
 		0A00010B0000000000000000 /* Services/PinyinAnnotator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000B0000000000000000 /* Services/PinyinAnnotator.swift */; };
 		0A00010C0000000000000000 /* Services/TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000C0000000000000000 /* Services/TranslationService.swift */; };
 		0A00010D0000000000000000 /* Services/AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000D0000000000000000 /* Services/AppError.swift */; };
+		0A00010E0000000000000000 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000B10000000000000000 /* WhisperKit */; };
 		0A00010F0000000000000000 /* Services/LinkVideoImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */; };
 		0A0001100000000000000000 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000100000000000000000 /* PrivacyInfo.xcprivacy */; };
 		0A0001120000000000000000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000120000000000000000 /* Assets.xcassets */; };
-		0A00010E0000000000000000 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000B10000000000000000 /* WhisperKit */; };
 		0A0001130000000000000000 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000C10000000000000000 /* GoogleMobileAds */; };
+		0A0001140000000000000000 /* Features/AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000140000000000000000 /* Features/AdBannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,7 +34,6 @@
 		0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TranscriptWorkspaceView.swift; sourceTree = "<group>"; };
 		0A0000040000000000000000 /* Features/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/SettingsView.swift; sourceTree = "<group>"; };
 		0A0000050000000000000000 /* Features/FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/FlowLayout.swift; sourceTree = "<group>"; };
-		0A0000140000000000000000 /* Features/AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/AdBannerView.swift; sourceTree = "<group>"; };
 		0A0000060000000000000000 /* Models/TranscriptSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TranscriptSegment.swift; sourceTree = "<group>"; };
 		0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TranscriptionViewModel.swift; sourceTree = "<group>"; };
 		0A0000080000000000000000 /* Services/FileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FileImporter.swift; sourceTree = "<group>"; };
@@ -46,7 +45,8 @@
 		0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LinkVideoImporter.swift; sourceTree = "<group>"; };
 		0A0000100000000000000000 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0A0000120000000000000000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		0A0000200000000000000000 /* ChineseVideoTutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChineseVideoTutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A0000140000000000000000 /* Features/AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/AdBannerView.swift; sourceTree = "<group>"; };
+		0A0000200000000000000000 /* PinyinFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinyinFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,7 +97,7 @@
 		0A0000420000000000000000 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0A0000200000000000000000 /* ChineseVideoTutor.app */,
+				0A0000200000000000000000 /* PinyinFlow.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -123,7 +123,7 @@
 				0A0000C10000000000000000 /* GoogleMobileAds */,
 			);
 			productName = ChineseVideoTutor;
-			productReference = 0A0000200000000000000000 /* ChineseVideoTutor.app */;
+			productReference = 0A0000200000000000000000 /* PinyinFlow.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -217,8 +217,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -249,8 +248,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
