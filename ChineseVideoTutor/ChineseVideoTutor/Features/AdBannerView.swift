@@ -39,6 +39,7 @@ final class BannerViewController: UIViewController {
 
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bannerView)
+        bannerView.delegate = self
 
         NSLayoutConstraint.activate([
             bannerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -55,5 +56,15 @@ final class BannerViewController: UIViewController {
         bannerView.adUnitID = adUnitID
         bannerView.rootViewController = self
         bannerView.load(Request())
+    }
+}
+
+extension BannerViewController: BannerViewDelegate {
+    func bannerViewDidReceiveAd(_ bannerView: BannerView) {
+        print("AdMob: ad loaded successfully.")
+    }
+
+    func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
+        print("AdMob: failed to load ad: \(error.localizedDescription)")
     }
 }

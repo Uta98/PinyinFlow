@@ -478,10 +478,10 @@ private struct FavoriteSubtitleRow: View {
                 open()
             } label: {
                 VStack(alignment: .leading, spacing: 8) {
-                    PinyinFlow(tokens: result.segment.pinyinTokens, textScale: 0.78 * textScale)
+                    PinyinFlow(tokens: result.segment.pinyinTokens, textScale: textScale)
                     if result.segment.japaneseTranslation.isEmpty == false {
                         Text(TranscriptTextCleaner.clean(result.segment.japaneseTranslation))
-                            .font(.system(size: 15 * textScale))
+                            .font(.system(size: 16 * textScale))
                             .foregroundStyle(.secondary)
                     }
                 }
