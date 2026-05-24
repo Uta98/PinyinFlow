@@ -46,6 +46,7 @@
 		0A0000100000000000000000 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0A0000120000000000000000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A0000140000000000000000 /* Features/AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/AdBannerView.swift; sourceTree = "<group>"; };
+		0A0000150000000000000000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0A0000200000000000000000 /* PinyinFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinyinFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -88,6 +89,7 @@
 				0A00000C0000000000000000 /* Services/TranslationService.swift */,
 				0A00000D0000000000000000 /* Services/AppError.swift */,
 				0A00000F0000000000000000 /* Services/LinkVideoImporter.swift */,
+				0A0000150000000000000000 /* Info.plist */,
 				0A0000120000000000000000 /* Assets.xcassets */,
 				0A0000100000000000000000 /* PrivacyInfo.xcprivacy */,
 			);
@@ -209,15 +211,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4M595X53A7;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PinyinFlow;
-				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-2083362073572230~4560003203";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ChineseVideoTutor/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -240,15 +235,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4M595X53A7;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PinyinFlow;
-				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-2083362073572230~4560003203";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ChineseVideoTutor/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
