@@ -170,4 +170,25 @@ enum ProcessingPhase: Equatable {
             "解析が完了しました。"
         }
     }
+
+    var progressValue: Double {
+        switch self {
+        case .idle:
+            0
+        case .importing:
+            0.12
+        case .extractingAudio:
+            0.26
+        case .requestingSpeechPermission:
+            0.38
+        case .transcribing:
+            0.58
+        case .annotating:
+            0.78
+        case .translating:
+            0.92
+        case .finished:
+            1
+        }
+    }
 }

@@ -21,7 +21,7 @@ struct TranscriptWorkspaceView: View {
                 player: player,
                 mediaURL: viewModel.selectedVideoURL,
                 isTextOnly: viewModel.isTextOnlySession,
-                isProcessing: viewModel.phase.isBusy
+                phase: viewModel.phase
             )
                 .frame(maxWidth: .infinity)
                 .frame(height: 360)
@@ -154,12 +154,12 @@ private struct VideoPane: View {
     let player: AVPlayer?
     let mediaURL: URL?
     let isTextOnly: Bool
-    let isProcessing: Bool
+    let phase: ProcessingPhase
 
     var body: some View {
         Group {
-            if isProcessing {
-                ProcessingMediaPane()
+            if phase.isBusy {
+                ProcessingMediaPane(phase: phase)
             } else if isTextOnly {
                 MediaIconPane(systemName: "text.quote")
             } else if mediaURL?.isStandaloneAudioFile == true {
@@ -174,24 +174,59 @@ private struct VideoPane: View {
 }
 
 private struct ProcessingMediaPane: View {
+    let phase: ProcessingPhase
+
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             ProgressView()
                 .controlSize(.large)
                 .tint(AppTheme.accent)
-            VStack(spacing: 6) {
+
+            VStack(spacing: 10) {
                 Text("処理中")
                     .font(.headline)
                     .foregroundStyle(.white)
-                Text("字幕を準備しています")
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.68))
+
+                VStack(spacing: 8) {
+                    ProgressView(value: phase.progressValue)
+                        .progressViewStyle(.linear)
+                        .tint(AppTheme.accent)
+                        .frame(maxWidth: 320)
+                    Text(phase.statusText)
+                        .font(.subheadline)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white.opacity(0.68))
+                }
             }
+
             WaitingAdSlotView(style: .dark)
-                .frame(maxWidth: 340)
-                .padding(.horizontal, 24)
+                .frame(maxWidth: 380)
+                .padding(.horizontal, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct ProcessingProgressBar: View {
+    let phase: ProcessingPhase
+    let isDark: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(phase.statusText)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text("\(Int((phase.progressValue * 100).rounded()))%")
+                    .font(.caption.monospacedDigit().weight(.semibold))
+            }
+            .foregroundStyle(isDark ? .white.opacity(0.82) : .secondary)
+
+            ProgressView(value: phase.progressValue)
+                .progressViewStyle(.linear)
+                .tint(AppTheme.accent)
+        }
     }
 }
 
@@ -249,7 +284,7 @@ private struct TranscriptTimelineView: View {
             ScrollView {
                 LazyVStack(spacing: 10) {
                     if segments.isEmpty {
-                        ProcessingSkeletonView(isAnimating: phase.isBusy)
+                        ProcessingSkeletonView(phase: phase)
                         .padding(.top, 48)
                     } else {
                         ForEach(segments) { segment in
@@ -278,11 +313,13 @@ private struct TranscriptTimelineView: View {
 }
 
 private struct ProcessingSkeletonView: View {
-    let isAnimating: Bool
+    let phase: ProcessingPhase
     @State private var pulse = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            ProcessingProgressBar(phase: phase, isDark: false)
+
             ForEach(0..<5, id: \.self) { index in
                 VStack(alignment: .leading, spacing: 8) {
                     RoundedRectangle(cornerRadius: 3)
@@ -304,7 +341,7 @@ private struct ProcessingSkeletonView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(pulse ? 0.45 : 1)
         .onAppear {
-            guard isAnimating else { return }
+            guard phase.isBusy else { return }
             withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                 pulse = true
             }
@@ -335,7 +372,7 @@ private struct WaitingAdSlotView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(style == .dark ? Color.white.opacity(0.82) : AppTheme.accent)
                 }
-                .frame(height: 72)
+                .frame(height: style == .dark ? 132 : 96)
                 .overlay {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(style == .dark ? Color.white.opacity(0.14) : AppTheme.accentStroke, lineWidth: 1)

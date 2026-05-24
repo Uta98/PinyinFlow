@@ -703,6 +703,7 @@ private struct VideoThumbnailView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Rectangle()
                     .fill(Color(.tertiarySystemFill))
