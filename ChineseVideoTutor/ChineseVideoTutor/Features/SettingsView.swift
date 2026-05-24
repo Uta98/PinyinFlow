@@ -43,7 +43,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("翻訳ツール") {
+                Section {
                     Picker("翻訳", selection: $translationEngine) {
                         ForEach(translationEngines, id: \.0) { engine in
                             Text(engine.1).tag(engine.0)
@@ -61,13 +61,13 @@ struct SettingsView: View {
                             DeepLAPIKeySettingsView(apiKey: $apiKey)
                         }
                     }
-                }
-
-                Section {
+                } header: {
+                    Text("翻訳ツール")
+                } footer: {
                     SettingsDescriptionText("DeepLはAPIキーを使って翻訳します。iOS純正翻訳は端末の対応状況と言語モデルに依存します。")
                 }
 
-                Section("文字起こしツール") {
+                Section {
                     Picker("文字起こし", selection: $transcriptionEngine) {
                         ForEach(transcriptionEngines, id: \.0) { engine in
                             Text(engine.1).tag(engine.0)
@@ -81,9 +81,9 @@ struct SettingsView: View {
                             }
                         }
                     }
-                }
-
-                Section {
+                } header: {
+                    Text("文字起こしツール")
+                } footer: {
                     SettingsDescriptionText("WhisperKitは端末内で文字起こしします。iOS純正はSpeechフレームワークを使うため、音声認識の許可と端末/言語の対応状況に依存します。")
                 }
 
@@ -137,7 +137,7 @@ private struct SettingsDescriptionText: View {
         Text(text)
             .font(.footnote)
             .foregroundStyle(.secondary)
-            .listRowBackground(Color(.systemGroupedBackground))
+            .padding(.top, 2)
     }
 }
 

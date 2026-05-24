@@ -533,16 +533,26 @@ private struct HistoryTile: View {
         Button {
             open()
         } label: {
-            Color.clear
-                .aspectRatio(9.0 / 16.0, contentMode: .fit)
-                .overlay {
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomTrailing) {
                     HistoryPreview(session: session)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+
+                    if shouldShowDuration {
+                        DurationBadge(text: session.durationText)
+                    }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .clipped()
+            }
+            .aspectRatio(9.0 / 16.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+    }
+
+    private var shouldShowDuration: Bool {
+        session.isTextOnly == false && session.durationText != "0:00"
     }
 }
 
@@ -566,25 +576,15 @@ private struct HistoryPreview: View {
             .padding(8)
             .background(AppTheme.textCardSurface)
         } else if session.isAudioOnly {
-            ZStack(alignment: .bottomTrailing) {
+            ZStack {
                 Rectangle()
                     .fill(AppTheme.textCardSurface)
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 34, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
-
-                if session.durationText != "0:00" {
-                    Text(session.durationText)
-                        .font(.caption2.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 3)
-                        .background(.black.opacity(0.72), in: Capsule())
-                        .padding(5)
-                }
             }
         } else {
-            VideoThumbnailView(url: session.videoURL, durationText: session.durationText)
+            VideoThumbnailView(url: session.videoURL)
         }
     }
 
@@ -638,38 +638,29 @@ private struct SearchResultRow: View {
 
 private struct VideoThumbnailView: View {
     let url: URL
-    let durationText: String
     @State private var image: UIImage?
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Rectangle()
-                    .fill(Color(.tertiarySystemFill))
-                Image(systemName: "movie")
-                    .foregroundStyle(.secondary)
+        GeometryReader { proxy in
+            ZStack {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                } else {
+                    Rectangle()
+                        .fill(Color(.tertiarySystemFill))
+                    Image(systemName: "movie")
+                        .foregroundStyle(.secondary)
+                }
             }
-
-            if durationText != "0:00" {
-                Text(durationText)
-                    .font(.caption2.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 3)
-                    .background(.black.opacity(0.72), in: Capsule())
-                    .padding(5)
-            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
         }
         .task(id: url) {
             image = await makeThumbnail(url: url)
         }
-        .clipped()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func makeThumbnail(url: URL) async -> UIImage? {
@@ -683,5 +674,19 @@ private struct VideoThumbnailView: View {
         } catch {
             return nil
         }
+    }
+}
+
+private struct DurationBadge: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.caption2.monospacedDigit().weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 3)
+            .background(.black.opacity(0.72), in: Capsule())
+            .padding(5)
     }
 }
