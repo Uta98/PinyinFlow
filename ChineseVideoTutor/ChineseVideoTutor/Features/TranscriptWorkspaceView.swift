@@ -318,8 +318,6 @@ private struct ProcessingSkeletonView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            ProcessingProgressBar(phase: phase, isDark: false)
-
             ForEach(0..<5, id: \.self) { index in
                 VStack(alignment: .leading, spacing: 8) {
                     RoundedRectangle(cornerRadius: 3)
@@ -350,6 +348,8 @@ private struct ProcessingSkeletonView: View {
 }
 
 private struct WaitingAdSlotView: View {
+    private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
+
     enum Style {
         case light
         case dark
@@ -365,14 +365,10 @@ private struct WaitingAdSlotView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(style == .dark ? Color.white.opacity(0.08) : AppTheme.accentSoft)
                 .overlay {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkles.rectangle.stack")
-                        Text("処理中に広告を表示するスペース")
-                    }
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(style == .dark ? Color.white.opacity(0.82) : AppTheme.accent)
+                    AdBannerView(adUnitID: adUnitID)
+                        .frame(width: 300, height: 250)
                 }
-                .frame(height: style == .dark ? 132 : 96)
+                .frame(height: style == .dark ? 250 : 250)
                 .overlay {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(style == .dark ? Color.white.opacity(0.14) : AppTheme.accentStroke, lineWidth: 1)

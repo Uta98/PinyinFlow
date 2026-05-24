@@ -12,6 +12,7 @@
 		0A0001030000000000000000 /* Features/TranscriptWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */; };
 		0A0001040000000000000000 /* Features/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000040000000000000000 /* Features/SettingsView.swift */; };
 		0A0001050000000000000000 /* Features/FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000050000000000000000 /* Features/FlowLayout.swift */; };
+		0A0001140000000000000000 /* Features/AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000140000000000000000 /* Features/AdBannerView.swift */; };
 		0A0001060000000000000000 /* Models/TranscriptSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000060000000000000000 /* Models/TranscriptSegment.swift */; };
 		0A0001070000000000000000 /* Services/TranscriptionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */; };
 		0A0001080000000000000000 /* Services/FileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000080000000000000000 /* Services/FileImporter.swift */; };
@@ -24,6 +25,7 @@
 		0A0001100000000000000000 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000100000000000000000 /* PrivacyInfo.xcprivacy */; };
 		0A0001120000000000000000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000120000000000000000 /* Assets.xcassets */; };
 		0A00010E0000000000000000 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000B10000000000000000 /* WhisperKit */; };
+		0A0001130000000000000000 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000C10000000000000000 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,7 @@
 		0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TranscriptWorkspaceView.swift; sourceTree = "<group>"; };
 		0A0000040000000000000000 /* Features/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/SettingsView.swift; sourceTree = "<group>"; };
 		0A0000050000000000000000 /* Features/FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/FlowLayout.swift; sourceTree = "<group>"; };
+		0A0000140000000000000000 /* Features/AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/AdBannerView.swift; sourceTree = "<group>"; };
 		0A0000060000000000000000 /* Models/TranscriptSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TranscriptSegment.swift; sourceTree = "<group>"; };
 		0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TranscriptionViewModel.swift; sourceTree = "<group>"; };
 		0A0000080000000000000000 /* Services/FileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FileImporter.swift; sourceTree = "<group>"; };
@@ -52,6 +55,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A00010E0000000000000000 /* WhisperKit in Frameworks */,
+				0A0001130000000000000000 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +78,7 @@
 				0A0000030000000000000000 /* Features/TranscriptWorkspaceView.swift */,
 				0A0000040000000000000000 /* Features/SettingsView.swift */,
 				0A0000050000000000000000 /* Features/FlowLayout.swift */,
+				0A0000140000000000000000 /* Features/AdBannerView.swift */,
 				0A0000060000000000000000 /* Models/TranscriptSegment.swift */,
 				0A0000070000000000000000 /* Services/TranscriptionViewModel.swift */,
 				0A0000080000000000000000 /* Services/FileImporter.swift */,
@@ -115,6 +120,7 @@
 			name = ChineseVideoTutor;
 			packageProductDependencies = (
 				0A0000B10000000000000000 /* WhisperKit */,
+				0A0000C10000000000000000 /* GoogleMobileAds */,
 			);
 			productName = ChineseVideoTutor;
 			productReference = 0A0000200000000000000000 /* ChineseVideoTutor.app */;
@@ -147,6 +153,7 @@
 			mainGroup = 0A0000400000000000000000;
 			packageReferences = (
 				0A0000B00000000000000000 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */,
+				0A0000C00000000000000000 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			productRefGroup = 0A0000420000000000000000 /* Products */;
 			projectDirPath = "";
@@ -179,6 +186,7 @@
 				0A0001030000000000000000 /* Features/TranscriptWorkspaceView.swift in Sources */,
 				0A0001040000000000000000 /* Features/SettingsView.swift in Sources */,
 				0A0001050000000000000000 /* Features/FlowLayout.swift in Sources */,
+				0A0001140000000000000000 /* Features/AdBannerView.swift in Sources */,
 				0A0001060000000000000000 /* Models/TranscriptSegment.swift in Sources */,
 				0A0001070000000000000000 /* Services/TranscriptionViewModel.swift in Sources */,
 				0A0001080000000000000000 /* Services/FileImporter.swift in Sources */,
@@ -203,6 +211,7 @@
 				DEVELOPMENT_TEAM = 4M595X53A7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PinyinFlow;
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-2083362073572230~4560003203";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -234,6 +243,7 @@
 				DEVELOPMENT_TEAM = 4M595X53A7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PinyinFlow;
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-2083362073572230~4560003203";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "中国語動画の音声を文字起こしするために音声認識を使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -406,6 +416,14 @@
 				minimumVersion = 0.9.0;
 			};
 		};
+		0A0000C00000000000000000 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -413,6 +431,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A0000B00000000000000000 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */;
 			productName = WhisperKit;
+		};
+		0A0000C10000000000000000 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A0000C00000000000000000 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

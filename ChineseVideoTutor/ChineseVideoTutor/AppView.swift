@@ -594,9 +594,13 @@ private struct HistoryTile: View {
         Button {
             open()
         } label: {
-            HistoryPreview(session: session)
+            Color.clear
                 .aspectRatio(9.0 / 16.0, contentMode: .fit)
+                .overlay {
+                    HistoryPreview(session: session)
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipped()
         }
         .buttonStyle(.plain)
     }
@@ -725,6 +729,7 @@ private struct VideoThumbnailView: View {
             image = await makeThumbnail(url: url)
         }
         .clipped()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func makeThumbnail(url: URL) async -> UIImage? {
