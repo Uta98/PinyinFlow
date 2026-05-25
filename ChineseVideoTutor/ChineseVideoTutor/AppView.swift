@@ -37,11 +37,11 @@ struct AppView: View {
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @State private var isShowingSettings = false
-    @State private var isShowingImportOptions = false
     @State private var isShowingTextSheet = false
     @State private var isImportingVideo = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var inputText = ""
+    @State private var homeSearchText = ""
 
     var body: some View {
         Group {
@@ -50,6 +50,7 @@ struct AppView: View {
                     ImportHomeView(
                         history: viewModel.history,
                         textScale: textScale,
+                        searchText: $homeSearchText,
                         openSession: { session, startTime in
                             viewModel.loadSession(session, startTime: startTime)
                         },
@@ -59,8 +60,22 @@ struct AppView: View {
                     .navigationTitle("PinyinFlow")
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
-                            Button {
-                                isShowingImportOptions = true
+                            Menu {
+                                Button {
+                                    isImportingVideo = true
+                                } label: {
+                                    Label("ファイル", systemImage: "folder")
+                                }
+
+                                PhotosPicker(selection: $selectedPhotoItem, matching: .videos) {
+                                    Label("写真", systemImage: "photo.on.rectangle")
+                                }
+
+                                Button {
+                                    isShowingTextSheet = true
+                                } label: {
+                                    Label("テキスト", systemImage: "text.quote")
+                                }
                             } label: {
                                 Image(systemName: "plus")
                             }
@@ -82,20 +97,6 @@ struct AppView: View {
                     playbackRate: $playbackRate
                 )
             }
-        }
-        .sheet(isPresented: $isShowingImportOptions) {
-            ImportOptionsSheet(
-                importFromFiles: {
-                    isShowingImportOptions = false
-                    isImportingVideo = true
-                },
-                selectedPhotoItem: $selectedPhotoItem,
-                showTextInput: {
-                    isShowingImportOptions = false
-                    isShowingTextSheet = true
-                }
-            )
-            .presentationDetents([.height(260)])
         }
         .sheet(isPresented: $isShowingTextSheet) {
             TextImportSheet(inputText: $inputText) { text in
@@ -186,10 +187,10 @@ struct AppView: View {
 private struct ImportHomeView: View {
     let history: [TranscriptSession]
     let textScale: Double
+    @Binding var searchText: String
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let deleteSession: (TranscriptSession) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
-    @State private var searchText = ""
     @State private var sessionPendingDeletion: TranscriptSession?
     @State private var selectedMenu: MainMenu = .history
 
@@ -321,56 +322,6 @@ private struct ImportHomeView: View {
     }
 }
 
-private struct ImportOptionsSheet: View {
-    let importFromFiles: () -> Void
-    @Binding var selectedPhotoItem: PhotosPickerItem?
-    let showTextInput: () -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Button {
-                    importFromFiles()
-                } label: {
-                    ImportOptionRow(title: "ファイル", systemImage: "folder")
-                }
-
-                PhotosPicker(selection: $selectedPhotoItem, matching: .videos) {
-                    ImportOptionRow(title: "写真", systemImage: "photo.on.rectangle")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    showTextInput()
-                } label: {
-                    ImportOptionRow(title: "テキスト", systemImage: "text.quote")
-                }
-            }
-            .navigationTitle("取り込み")
-            .navigationBarTitleDisplayMode(.inline)
-            .onChange(of: selectedPhotoItem) { _, item in
-                if item != nil {
-                    dismiss()
-                }
-            }
-        }
-    }
-}
-
-private struct ImportOptionRow: View {
-    let title: String
-    let systemImage: String
-
-    var body: some View {
-        Label(title, systemImage: systemImage)
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.primary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 8)
-    }
-}
-
 private struct SearchField: View {
     @Binding var text: String
 
@@ -395,8 +346,8 @@ private struct SearchField: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: 48)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+        .frame(height: 42)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 
