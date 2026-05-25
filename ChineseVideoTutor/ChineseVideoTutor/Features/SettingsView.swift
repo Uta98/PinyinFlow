@@ -23,12 +23,12 @@ struct SettingsView: View {
         ("大", 1.2)
     ]
     private let translationEngines = [
-        ("deepl", "DeepL"),
-        ("ios", "iOS純正")
+        ("ios", "iOS純正"),
+        ("deepl", "DeepL")
     ]
     private let transcriptionEngines = [
-        ("whisperkit", "WhisperKit"),
-        ("ios", "iOS純正")
+        ("ios", "iOS純正"),
+        ("whisperkit", "WhisperKit")
     ]
 
     private var textSizeSelection: Binding<Double> {
@@ -44,15 +44,15 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("翻訳", selection: $translationEngine) {
-                        ForEach(translationEngines, id: \.0) { engine in
-                            Text(engine.1).tag(engine.0)
-                        }
-                    }
-
                     Picker("翻訳先", selection: $translationTarget) {
                         ForEach(TranslationTargetLanguage.allCases) { language in
                             Text(language.displayName).tag(language.rawValue)
+                        }
+                    }
+
+                    Picker("ツール", selection: $translationEngine) {
+                        ForEach(translationEngines, id: \.0) { engine in
+                            Text(engine.1).tag(engine.0)
                         }
                     }
 
@@ -68,7 +68,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Picker("文字起こし", selection: $transcriptionEngine) {
+                    Picker("ツール", selection: $transcriptionEngine) {
                         ForEach(transcriptionEngines, id: \.0) { engine in
                             Text(engine.1).tag(engine.0)
                         }

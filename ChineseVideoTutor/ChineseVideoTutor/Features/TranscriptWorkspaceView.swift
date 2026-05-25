@@ -492,10 +492,10 @@ private struct SubtitleEditView: View {
         NavigationStack {
             Form {
                 Section("中国語") {
-                    TextEditor(text: $sourceText)
-                        .frame(minHeight: 96)
                     PinyinFlow(tokens: livePinyinTokens, textScale: 0.9)
                         .padding(.vertical, 6)
+                    TextEditor(text: $sourceText)
+                        .frame(minHeight: 96)
                 }
 
                 Section("翻訳") {

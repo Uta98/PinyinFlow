@@ -37,8 +37,11 @@ struct AppView: View {
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @State private var isShowingSettings = false
+    @State private var isShowingImportOptions = false
+    @State private var isShowingTextSheet = false
     @State private var isImportingVideo = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var inputText = ""
 
     var body: some View {
         Group {
@@ -47,13 +50,6 @@ struct AppView: View {
                     ImportHomeView(
                         history: viewModel.history,
                         textScale: textScale,
-                        importFromFiles: { isImportingVideo = true },
-                        selectedPhotoItem: $selectedPhotoItem,
-                        importText: { text in
-                            Task {
-                                await viewModel.importText(text)
-                            }
-                        },
                         openSession: { session, startTime in
                             viewModel.loadSession(session, startTime: startTime)
                         },
@@ -62,7 +58,14 @@ struct AppView: View {
                     )
                     .navigationTitle("PinyinFlow")
                     .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            Button {
+                                isShowingImportOptions = true
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                            .accessibilityLabel("取り込み")
+
                             Button {
                                 isShowingSettings = true
                             } label: {
@@ -78,6 +81,28 @@ struct AppView: View {
                     textScale: textScale,
                     playbackRate: $playbackRate
                 )
+            }
+        }
+        .sheet(isPresented: $isShowingImportOptions) {
+            ImportOptionsSheet(
+                importFromFiles: {
+                    isShowingImportOptions = false
+                    isImportingVideo = true
+                },
+                selectedPhotoItem: $selectedPhotoItem,
+                showTextInput: {
+                    isShowingImportOptions = false
+                    isShowingTextSheet = true
+                }
+            )
+            .presentationDetents([.height(260)])
+        }
+        .sheet(isPresented: $isShowingTextSheet) {
+            TextImportSheet(inputText: $inputText) { text in
+                Task {
+                    await viewModel.importText(text)
+                }
+                inputText = ""
             }
         }
         .sheet(isPresented: $isShowingSettings) {
@@ -161,15 +186,10 @@ struct AppView: View {
 private struct ImportHomeView: View {
     let history: [TranscriptSession]
     let textScale: Double
-    let importFromFiles: () -> Void
-    @Binding var selectedPhotoItem: PhotosPickerItem?
-    let importText: (String) -> Void
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let deleteSession: (TranscriptSession) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
     @State private var searchText = ""
-    @State private var inputText = ""
-    @State private var isShowingTextSheet = false
     @State private var sessionPendingDeletion: TranscriptSession?
     @State private var selectedMenu: MainMenu = .history
 
@@ -216,11 +236,7 @@ private struct ImportHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                ImportActions(
-                    importFromFiles: importFromFiles,
-                    selectedPhotoItem: $selectedPhotoItem,
-                    showTextInput: { isShowingTextSheet = true }
-                )
+                SearchField(text: $searchText)
 
                 Picker("メニュー", selection: $selectedMenu) {
                     ForEach(MainMenu.allCases) { menu in
@@ -281,14 +297,7 @@ private struct ImportHomeView: View {
             }
             .padding()
         }
-        .searchable(text: $searchText, prompt: "中国語・拼音・翻訳を検索")
         .background(Color(.systemGroupedBackground))
-        .sheet(isPresented: $isShowingTextSheet) {
-            TextImportSheet(inputText: $inputText) { text in
-                importText(text)
-                inputText = ""
-            }
-        }
         .alert("動画を削除しますか？", isPresented: Binding(
             get: { sessionPendingDeletion != nil },
             set: { isPresented in
@@ -312,61 +321,82 @@ private struct ImportHomeView: View {
     }
 }
 
-private struct ImportActions: View {
+private struct ImportOptionsSheet: View {
     let importFromFiles: () -> Void
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let showTextInput: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Button {
+                    importFromFiles()
+                } label: {
+                    ImportOptionRow(title: "ファイル", systemImage: "folder")
+                }
+
+                PhotosPicker(selection: $selectedPhotoItem, matching: .videos) {
+                    ImportOptionRow(title: "写真", systemImage: "photo.on.rectangle")
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    showTextInput()
+                } label: {
+                    ImportOptionRow(title: "テキスト", systemImage: "text.quote")
+                }
+            }
+            .navigationTitle("取り込み")
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: selectedPhotoItem) { _, item in
+                if item != nil {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+private struct ImportOptionRow: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 8)
+    }
+}
+
+private struct SearchField: View {
+    @Binding var text: String
 
     var body: some View {
         HStack(spacing: 10) {
-            ImportActionButton(title: "ファイル", systemImage: "folder") {
-                importFromFiles()
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+
+            TextField("中国語・拼音・翻訳を検索", text: $text)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if text.isEmpty == false {
+                Button {
+                    text = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("検索をクリア")
             }
-
-            PhotosPicker(selection: $selectedPhotoItem, matching: .videos) {
-                ImportActionLabel(title: "写真", systemImage: "photo.on.rectangle")
-            }
-            .buttonStyle(.plain)
-
-            ImportActionButton(title: "テキスト", systemImage: "text.quote") {
-                showTextInput()
-            }
         }
-    }
-}
-
-private struct ImportActionButton: View {
-    let title: String
-    let systemImage: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ImportActionLabel(title: title, systemImage: systemImage)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct ImportActionLabel: View {
-    let title: String
-    let systemImage: String
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: systemImage)
-                .font(.system(size: 19, weight: .semibold))
-            Text(title)
-                .font(.caption.weight(.semibold))
-        }
-        .foregroundStyle(.primary)
-        .frame(maxWidth: .infinity)
-        .frame(height: 62)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        }
+        .padding(.horizontal, 14)
+        .frame(height: 48)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 }
 
