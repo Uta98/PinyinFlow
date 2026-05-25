@@ -38,6 +38,7 @@ struct AppView: View {
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @State private var isShowingSettings = false
     @State private var isShowingTextSheet = false
+    @State private var isShowingPhotoPicker = false
     @State private var isImportingVideo = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var inputText = ""
@@ -67,7 +68,9 @@ struct AppView: View {
                                     Label("ファイル", systemImage: "folder")
                                 }
 
-                                PhotosPicker(selection: $selectedPhotoItem, matching: .videos) {
+                                Button {
+                                    isShowingPhotoPicker = true
+                                } label: {
                                     Label("写真", systemImage: "photo.on.rectangle")
                                 }
 
@@ -106,6 +109,11 @@ struct AppView: View {
                 inputText = ""
             }
         }
+        .photosPicker(
+            isPresented: $isShowingPhotoPicker,
+            selection: $selectedPhotoItem,
+            matching: .videos
+        )
         .sheet(isPresented: $isShowingSettings) {
             SettingsView(
                 apiKey: $apiKey,
