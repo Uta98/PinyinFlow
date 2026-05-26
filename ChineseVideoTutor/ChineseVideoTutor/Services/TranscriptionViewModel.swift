@@ -43,6 +43,7 @@ final class TranscriptionViewModel: ObservableObject {
         azureTranslateAPIKey: String = "",
         azureTranslateRegion: String = "",
         openAIAPIKey: String = "",
+        assemblyAIAPIKey: String = "",
         whisperModel: String = "base",
         translationEngine: String = "deepl",
         transcriptionEngine: String = "whisperkit",
@@ -53,12 +54,19 @@ final class TranscriptionViewModel: ObservableObject {
         let trimmedAzureTranslateKey = azureTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedAzureTranslateRegion = azureTranslateRegion.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedOpenAIKey = openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAssemblyAIKey = assemblyAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let targetLanguage = TranslationTargetLanguage(rawValue: translationTarget) ?? .japanese
 
         if transcriptionEngine == "ios" {
             speechTranscriber = SpeechSpeechTranscriber(localeIdentifier: "zh-CN")
         } else if transcriptionEngine == "openai", trimmedOpenAIKey.isEmpty == false {
             speechTranscriber = OpenAIWhisperAPISpeechTranscriber(apiKey: trimmedOpenAIKey)
+        } else if transcriptionEngine == "openai" {
+            speechTranscriber = MissingAPIKeySpeechTranscriber(serviceName: "OpenAI")
+        } else if transcriptionEngine == "assemblyai", trimmedAssemblyAIKey.isEmpty == false {
+            speechTranscriber = AssemblyAISpeechTranscriber(apiKey: trimmedAssemblyAIKey)
+        } else if transcriptionEngine == "assemblyai" {
+            speechTranscriber = MissingAPIKeySpeechTranscriber(serviceName: "AssemblyAI")
         } else {
             speechTranscriber = WhisperKitSpeechTranscriber(model: whisperModel)
         }
@@ -67,12 +75,20 @@ final class TranscriptionViewModel: ObservableObject {
             translationService = AppleTranslationService(targetLanguage: targetLanguage)
         } else if translationEngine == "google", trimmedGoogleTranslateKey.isEmpty == false {
             translationService = GoogleCloudTranslationService(apiKey: trimmedGoogleTranslateKey, targetLanguage: targetLanguage)
+        } else if translationEngine == "google" {
+            translationService = MissingAPIKeyTranslationService(serviceName: "Google Cloud Translation")
         } else if translationEngine == "azure", trimmedAzureTranslateKey.isEmpty == false, trimmedAzureTranslateRegion.isEmpty == false {
             translationService = AzureTranslatorService(
                 apiKey: trimmedAzureTranslateKey,
                 region: trimmedAzureTranslateRegion,
                 targetLanguage: targetLanguage
             )
+        } else if translationEngine == "azure" {
+            translationService = MissingAPIKeyTranslationService(serviceName: "Azure AI Translator")
+        } else if translationEngine == "deepl", trimmedKey.isEmpty {
+            translationService = MissingAPIKeyTranslationService(serviceName: "DeepL")
+        } else if translationEngine == "deepl" {
+            translationService = DeepLTranslationService(apiKey: trimmedKey, targetLanguage: targetLanguage)
         } else if trimmedKey.isEmpty {
             translationService = DisabledTranslationService()
         } else {

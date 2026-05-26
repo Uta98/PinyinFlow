@@ -221,6 +221,170 @@ struct OpenAIWhisperAPISpeechTranscriber: SpeechTranscribing {
     }
 }
 
+struct MissingAPIKeySpeechTranscriber: SpeechTranscribing {
+    let serviceName: String
+
+    func requestAuthorization() async throws {
+        throw AppError.missingAPIKey(serviceName)
+    }
+
+    func transcribeAudio(at audioURL: URL) async throws -> [RawTranscriptSegment] {
+        throw AppError.missingAPIKey(serviceName)
+    }
+}
+
+struct AssemblyAISpeechTranscriber: SpeechTranscribing {
+    let apiKey: String
+
+    func requestAuthorization() async throws {}
+
+    func transcribeAudio(at audioURL: URL) async throws -> [RawTranscriptSegment] {
+        let uploadURL = try await upload(audioURL)
+        let transcriptID = try await createTranscript(audioURL: uploadURL)
+        let transcript = try await pollTranscript(id: transcriptID)
+        return transcript.rawSegments
+    }
+
+    private func upload(_ audioURL: URL) async throws -> URL {
+        var request = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/upload")!)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "authorization")
+        request.httpBody = try Data(contentsOf: audioURL)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              200..<300 ~= httpResponse.statusCode else {
+            throw AppError.transcriptionFailed("AssemblyAIへの音声アップロードに失敗しました。APIキーと通信状況を確認してください。")
+        }
+
+        let decoded = try JSONDecoder().decode(AssemblyAIUploadResponse.self, from: data)
+        return decoded.uploadURL
+    }
+
+    private func createTranscript(audioURL: URL) async throws -> String {
+        var request = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/transcript")!)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(AssemblyAITranscriptRequest(
+            audioURL: audioURL,
+            languageCode: "zh",
+            punctuate: true,
+            formatText: true
+        ))
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              200..<300 ~= httpResponse.statusCode else {
+            throw AppError.transcriptionFailed("AssemblyAIの文字起こし作成に失敗しました。")
+        }
+
+        let decoded = try JSONDecoder().decode(AssemblyAITranscriptResponse.self, from: data)
+        return decoded.id
+    }
+
+    private func pollTranscript(id: String) async throws -> AssemblyAITranscriptResponse {
+        let url = URL(string: "https://api.assemblyai.com/v2/transcript/\(id)")!
+
+        for _ in 0..<180 {
+            var request = URLRequest(url: url)
+            request.setValue(apiKey, forHTTPHeaderField: "authorization")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  200..<300 ~= httpResponse.statusCode else {
+                throw AppError.transcriptionFailed("AssemblyAIの文字起こし結果を取得できませんでした。")
+            }
+
+            let decoded = try JSONDecoder().decode(AssemblyAITranscriptResponse.self, from: data)
+            switch decoded.status {
+            case "completed":
+                return decoded
+            case "error":
+                throw AppError.transcriptionFailed(decoded.error ?? "AssemblyAIの文字起こしに失敗しました。")
+            default:
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+        }
+
+        throw AppError.transcriptionFailed("AssemblyAIの文字起こしが時間内に完了しませんでした。")
+    }
+}
+
+private struct AssemblyAIUploadResponse: Decodable {
+    var uploadURL: URL
+
+    enum CodingKeys: String, CodingKey {
+        case uploadURL = "upload_url"
+    }
+}
+
+private struct AssemblyAITranscriptRequest: Encodable {
+    var audioURL: URL
+    var languageCode: String
+    var punctuate: Bool
+    var formatText: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case audioURL = "audio_url"
+        case languageCode = "language_code"
+        case punctuate
+        case formatText = "format_text"
+    }
+}
+
+private struct AssemblyAITranscriptResponse: Decodable {
+    var id: String
+    var status: String
+    var text: String?
+    var words: [Word]?
+    var error: String?
+
+    var rawSegments: [RawTranscriptSegment] {
+        guard let words, words.isEmpty == false else {
+            let fallback = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return fallback.isEmpty ? [] : [RawTranscriptSegment(text: fallback, startTime: 0, endTime: 0.4)]
+        }
+
+        var segments: [RawTranscriptSegment] = []
+        var currentText = ""
+        var startTime = TimeInterval(words[0].start) / 1000
+        var endTime = startTime
+
+        for word in words {
+            let token = word.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard token.isEmpty == false else { continue }
+            if currentText.isEmpty == false {
+                currentText += shouldAttachWithoutSpace(token) ? "" : " "
+            }
+            currentText += token
+            endTime = TimeInterval(word.end) / 1000
+
+            if token.range(of: #"[。！？!?；;]$"#, options: .regularExpression) != nil || currentText.count >= 48 {
+                segments.append(RawTranscriptSegment(text: currentText, startTime: startTime, endTime: max(endTime, startTime + 0.4)))
+                currentText = ""
+                startTime = endTime
+            }
+        }
+
+        if currentText.isEmpty == false {
+            segments.append(RawTranscriptSegment(text: currentText, startTime: startTime, endTime: max(endTime, startTime + 0.4)))
+        }
+
+        return segments
+    }
+
+    private func shouldAttachWithoutSpace(_ token: String) -> Bool {
+        token.range(of: #"^[\p{Han}，。！？；：、,.!?;:]$"#, options: .regularExpression) != nil
+    }
+
+    struct Word: Decodable {
+        var text: String
+        var start: Int
+        var end: Int
+    }
+}
+
 private struct OpenAITranscriptionResponse: Decodable {
     var text: String
     var segments: [Segment]

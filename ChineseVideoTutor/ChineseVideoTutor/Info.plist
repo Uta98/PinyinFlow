@@ -26,6 +26,10 @@
 	<string>public.app-category.education</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>写真ライブラリから中国語動画を選択して文字起こしするために使用します。</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>中国語動画の音声を文字起こしするために音声認識を使用します。</string>
 	<key>UIApplicationSceneManifest</key>
@@ -36,6 +40,8 @@
 		<dict/>
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>

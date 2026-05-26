@@ -5,6 +5,7 @@ enum AppError: LocalizedError {
     case audioExtractionFailed
     case speechPermissionDenied
     case speechRecognizerUnavailable
+    case missingAPIKey(String)
     case transcriptionFailed(String)
     case translationFailed
     case linkVideoNotFound
@@ -20,6 +21,8 @@ enum AppError: LocalizedError {
             "音声認識の許可が必要です。設定アプリで許可してください。"
         case .speechRecognizerUnavailable:
             "中国語の音声認識を利用できません。WhisperKit の端末内文字起こしへ切り替えます。"
+        case .missingAPIKey(let serviceName):
+            "\(serviceName) のAPIキーを設定してください。"
         case .transcriptionFailed(let message):
             message.isEmpty ? "文字起こしに失敗しました。" : message
         case .translationFailed:

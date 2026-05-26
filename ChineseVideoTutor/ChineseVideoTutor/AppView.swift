@@ -34,12 +34,14 @@ struct AppView: View {
     @AppStorage("azureTranslate.apiKey") private var azureTranslateAPIKey = ""
     @AppStorage("azureTranslate.region") private var azureTranslateRegion = ""
     @AppStorage("openai.apiKey") private var openAIAPIKey = ""
+    @AppStorage("assemblyAI.apiKey") private var assemblyAIAPIKey = ""
     @AppStorage("whisperkit.model") private var whisperModel = "base"
     @AppStorage("translation.engine") private var translationEngine = "deepl"
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
     @AppStorage("transcription.engine") private var transcriptionEngine = "whisperkit"
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
+    @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
     @State private var isShowingSettings = false
     @State private var isShowingTextSheet = false
     @State private var isShowingPhotoPicker = false
@@ -125,12 +127,25 @@ struct AppView: View {
                 azureTranslateAPIKey: $azureTranslateAPIKey,
                 azureTranslateRegion: $azureTranslateRegion,
                 openAIAPIKey: $openAIAPIKey,
+                assemblyAIAPIKey: $assemblyAIAPIKey,
                 whisperModel: $whisperModel,
                 translationEngine: $translationEngine,
                 transcriptionEngine: $transcriptionEngine,
                 translationTarget: $translationTarget,
                 textScale: $textScale
             )
+        }
+        .sheet(isPresented: Binding(
+            get: { privacyAccepted == false },
+            set: { isPresented in
+                if isPresented == false {
+                    privacyAccepted = true
+                }
+            }
+        )) {
+            FirstLaunchPrivacyView {
+                privacyAccepted = true
+            }
         }
         .fileImporter(
             isPresented: $isImportingVideo,
@@ -172,6 +187,9 @@ struct AppView: View {
         .onChange(of: openAIAPIKey) { _, newValue in
             configureViewModelServices(openAIAPIKey: newValue)
         }
+        .onChange(of: assemblyAIAPIKey) { _, newValue in
+            configureViewModelServices(assemblyAIAPIKey: newValue)
+        }
         .onChange(of: whisperModel) { _, newValue in
             configureViewModelServices(whisperModel: newValue)
         }
@@ -201,6 +219,7 @@ struct AppView: View {
         azureTranslateAPIKey: String? = nil,
         azureTranslateRegion: String? = nil,
         openAIAPIKey: String? = nil,
+        assemblyAIAPIKey: String? = nil,
         whisperModel: String? = nil,
         translationEngine: String? = nil,
         transcriptionEngine: String? = nil,
@@ -212,11 +231,45 @@ struct AppView: View {
             azureTranslateAPIKey: azureTranslateAPIKey ?? self.azureTranslateAPIKey,
             azureTranslateRegion: azureTranslateRegion ?? self.azureTranslateRegion,
             openAIAPIKey: openAIAPIKey ?? self.openAIAPIKey,
+            assemblyAIAPIKey: assemblyAIAPIKey ?? self.assemblyAIAPIKey,
             whisperModel: whisperModel ?? self.whisperModel,
             translationEngine: translationEngine ?? self.translationEngine,
             transcriptionEngine: transcriptionEngine ?? self.transcriptionEngine,
             translationTarget: translationTarget ?? self.translationTarget
         )
+    }
+}
+
+private struct FirstLaunchPrivacyView: View {
+    let accept: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Label("動画・音声・テキスト、字幕、拼音、翻訳、お気に入りは端末内に保存されます。", systemImage: "iphone")
+                    Label("クラウド翻訳やクラウド文字起こしを選ぶと、対象データが選択した外部サービスへ送信されます。", systemImage: "cloud")
+                    Label("無料で使えるようにするため、処理中や履歴画面に広告を表示することがあります。", systemImage: "rectangle.and.text.magnifyingglass")
+                } header: {
+                    Text("PinyinFlowのデータ利用")
+                }
+
+                Section {
+                    Text("写真、ファイル、音声認識などの権限は、必要な機能を使う時だけiOSの確認画面が表示されます。設定はあとから設定アプリで変更できます。")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("はじめに")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("同意して始める") {
+                        accept()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .interactiveDismissDisabled()
     }
 }
 

@@ -74,6 +74,18 @@ struct PreviewTranslationService: TranslationServicing {
     }
 }
 
+struct MissingAPIKeyTranslationService: TranslationServicing {
+    let serviceName: String
+
+    func translate(_ chineseText: String) async throws -> String {
+        throw AppError.missingAPIKey(serviceName)
+    }
+
+    func translate(_ chineseTexts: [String]) async throws -> [String] {
+        throw AppError.missingAPIKey(serviceName)
+    }
+}
+
 struct DeepLTranslationService: TranslationServicing {
     let apiKey: String
     let targetLanguage: TranslationTargetLanguage

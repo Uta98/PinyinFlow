@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Binding var apiKey: String
@@ -6,6 +7,7 @@ struct SettingsView: View {
     @Binding var azureTranslateAPIKey: String
     @Binding var azureTranslateRegion: String
     @Binding var openAIAPIKey: String
+    @Binding var assemblyAIAPIKey: String
     @Binding var whisperModel: String
     @Binding var translationEngine: String
     @Binding var transcriptionEngine: String
@@ -35,7 +37,8 @@ struct SettingsView: View {
     private let transcriptionEngines = [
         ("ios", "iOS純正"),
         ("whisperkit", "WhisperKit"),
-        ("openai", "OpenAI Whisper API")
+        ("openai", "OpenAI Whisper API"),
+        ("assemblyai", "AssemblyAI")
     ]
 
     private var textSizeSelection: Binding<Double> {
@@ -114,11 +117,19 @@ struct SettingsView: View {
                                 note: "OpenAI Whisper APIを使う場合のみ設定します。音声データをOpenAI APIへ送信して文字起こしします。"
                             )
                         }
+                    } else if transcriptionEngine == "assemblyai" {
+                        NavigationLink("AssemblyAI APIキー") {
+                            APIKeySettingsView(
+                                title: "AssemblyAI APIキー",
+                                apiKey: $assemblyAIAPIKey,
+                                note: "AssemblyAIを使う場合のみ設定します。音声データをAssemblyAIへ送信して文字起こしします。"
+                            )
+                        }
                     }
                 } header: {
                     Text("文字起こしツール")
                 } footer: {
-                    SettingsDescriptionText("WhisperKitは端末内で処理します。iOS純正はSpeechフレームワーク、OpenAI Whisper APIはクラウド文字起こしを使います。")
+                    SettingsDescriptionText("WhisperKitは端末内で処理します。iOS純正はSpeechフレームワーク、OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使います。")
                 }
 
                 Section("表示") {
@@ -133,6 +144,18 @@ struct SettingsView: View {
                 Section("App Store公開準備") {
                     NavigationLink("プライバシーとデータ利用") {
                         PrivacyInfoView()
+                    }
+                    NavigationLink("プライバシーポリシー") {
+                        PrivacyPolicyView()
+                    }
+                    NavigationLink("利用規約") {
+                        TermsOfUseView()
+                    }
+                    NavigationLink("お問い合わせ") {
+                        ContactInfoView()
+                    }
+                    NavigationLink("公開前チェックリスト") {
+                        ReleaseChecklistView()
                     }
                     Link("App Store Review Guidelines", destination: URL(string: "https://developer.apple.com/app-store/review/guidelines/")!)
                     Link("App Privacy Details", destination: URL(string: "https://developer.apple.com/app-store/app-privacy-details/")!)
@@ -230,7 +253,11 @@ private struct PrivacyInfoView: View {
             }
 
             Section("外部サービス") {
-                Text("DeepLを選択した場合、中国語テキストをDeepL APIへ送信して翻訳を作成します。iOS純正翻訳を選択した場合はAppleの翻訳機能を使用します。")
+                Text("DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。")
+            }
+
+            Section("広告") {
+                Text("Google Mobile Ads SDKを使って広告を表示します。広告配信に関するデータの扱いは、GoogleおよびAdMobの設定に従います。")
             }
 
             Section("権限") {
@@ -238,5 +265,94 @@ private struct PrivacyInfoView: View {
             }
         }
         .navigationTitle("プライバシー")
+    }
+}
+
+private struct PrivacyPolicyView: View {
+    var body: some View {
+        List {
+            Section("収集・保存する情報") {
+                Text("PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。ログイン機能はなく、アカウント情報は収集しません。")
+            }
+
+            Section("外部送信") {
+                Text("設定でクラウド翻訳またはクラウド文字起こしを選択した場合、処理に必要なテキストまたは音声データを選択中の外部サービスへ送信します。APIキーは端末内に保存されます。")
+            }
+
+            Section("広告") {
+                Text("本アプリはGoogle Mobile Ads SDKを利用して広告を表示する場合があります。広告表示に伴うデータの扱いは、Googleのポリシーとユーザーの同意設定に従います。")
+            }
+
+            Section("削除") {
+                Text("履歴の長押し削除により、保存済みの動画・音声・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。")
+            }
+        }
+        .navigationTitle("プライバシーポリシー")
+    }
+}
+
+private struct TermsOfUseView: View {
+    var body: some View {
+        List {
+            Section("利用目的") {
+                Text("PinyinFlowは、中国語の学習補助を目的として、動画・音声・テキストに拼音と翻訳を付与するアプリです。翻訳や文字起こしの結果は完全性を保証するものではありません。")
+            }
+
+            Section("ユーザーの責任") {
+                Text("取り込む動画・音声・テキストは、ユーザー自身が利用権限を持つものを使用してください。第三者の権利を侵害する利用は禁止します。")
+            }
+
+            Section("外部サービス") {
+                Text("外部APIを利用する場合、各サービスの利用規約、料金、制限が適用されます。APIキーの管理はユーザー自身の責任で行ってください。")
+            }
+        }
+        .navigationTitle("利用規約")
+    }
+}
+
+private struct ContactInfoView: View {
+    private let contactTemplate = """
+    PinyinFlow お問い合わせ
+
+    端末:
+    iOS:
+    アプリバージョン:
+    内容:
+    """
+
+    var body: some View {
+        List {
+            Section {
+                Button {
+                    UIPasteboard.general.string = contactTemplate
+                } label: {
+                    Label("問い合わせテンプレートをコピー", systemImage: "doc.on.doc")
+                }
+            } footer: {
+                SettingsDescriptionText("App Store Connectに登録するサポートURLまたはメールアドレスを用意したら、この画面の文言も公開用の連絡先に合わせて更新してください。")
+            }
+        }
+        .navigationTitle("お問い合わせ")
+    }
+}
+
+private struct ReleaseChecklistView: View {
+    private let items = [
+        "Apple Developer Programに登録する",
+        "App Store ConnectでPinyinFlowを作成する",
+        "Bundle ID、カテゴリ、年齢制限、価格、配信地域を設定する",
+        "プライバシーポリシーURLとサポートURLを用意する",
+        "App Privacyの回答を、広告SDKと外部API利用に合わせて入力する",
+        "AdMobの支払い情報、税務情報、アプリ審査を完了する",
+        "実機でファイル、写真、テキスト、履歴、広告、各設定を確認する",
+        "App Store用スクリーンショット、説明文、キーワードを登録する",
+        "TestFlightで少なくとも1回、インストールから主要機能まで確認する"
+    ]
+
+    var body: some View {
+        List(items, id: \.self) { item in
+            Label(item, systemImage: "checkmark.circle")
+        }
+        .navigationTitle("公開前チェックリスト")
     }
 }
