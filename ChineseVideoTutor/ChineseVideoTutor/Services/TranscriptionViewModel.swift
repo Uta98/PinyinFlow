@@ -39,22 +39,40 @@ final class TranscriptionViewModel: ObservableObject {
 
     func configureServices(
         apiKey: String,
+        googleTranslateAPIKey: String = "",
+        azureTranslateAPIKey: String = "",
+        azureTranslateRegion: String = "",
+        openAIAPIKey: String = "",
         whisperModel: String = "base",
         translationEngine: String = "deepl",
         transcriptionEngine: String = "whisperkit",
         translationTarget: String = TranslationTargetLanguage.japanese.rawValue
     ) {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedGoogleTranslateKey = googleTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAzureTranslateKey = azureTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAzureTranslateRegion = azureTranslateRegion.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedOpenAIKey = openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let targetLanguage = TranslationTargetLanguage(rawValue: translationTarget) ?? .japanese
 
         if transcriptionEngine == "ios" {
             speechTranscriber = SpeechSpeechTranscriber(localeIdentifier: "zh-CN")
+        } else if transcriptionEngine == "openai", trimmedOpenAIKey.isEmpty == false {
+            speechTranscriber = OpenAIWhisperAPISpeechTranscriber(apiKey: trimmedOpenAIKey)
         } else {
             speechTranscriber = WhisperKitSpeechTranscriber(model: whisperModel)
         }
 
         if translationEngine == "ios" {
             translationService = AppleTranslationService(targetLanguage: targetLanguage)
+        } else if translationEngine == "google", trimmedGoogleTranslateKey.isEmpty == false {
+            translationService = GoogleCloudTranslationService(apiKey: trimmedGoogleTranslateKey, targetLanguage: targetLanguage)
+        } else if translationEngine == "azure", trimmedAzureTranslateKey.isEmpty == false, trimmedAzureTranslateRegion.isEmpty == false {
+            translationService = AzureTranslatorService(
+                apiKey: trimmedAzureTranslateKey,
+                region: trimmedAzureTranslateRegion,
+                targetLanguage: targetLanguage
+            )
         } else if trimmedKey.isEmpty {
             translationService = DisabledTranslationService()
         } else {

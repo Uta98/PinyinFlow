@@ -153,6 +153,108 @@ actor WhisperKitSpeechTranscriber: SpeechTranscribing {
     }
 }
 
+struct OpenAIWhisperAPISpeechTranscriber: SpeechTranscribing {
+    let apiKey: String
+
+    func requestAuthorization() async throws {}
+
+    func transcribeAudio(at audioURL: URL) async throws -> [RawTranscriptSegment] {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/transcriptions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try makeMultipartBody(audioURL: audioURL, boundary: boundary)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              200..<300 ~= httpResponse.statusCode else {
+            throw AppError.transcriptionFailed("OpenAI Whisper API の文字起こしに失敗しました。APIキーと通信状況を確認してください。")
+        }
+
+        let decoded = try JSONDecoder().decode(OpenAITranscriptionResponse.self, from: data)
+        let segments = decoded.segments.map {
+            RawTranscriptSegment(
+                text: $0.text.trimmingCharacters(in: .whitespacesAndNewlines),
+                startTime: $0.start,
+                endTime: max($0.end, $0.start + 0.4)
+            )
+        }
+        .filter { $0.text.isEmpty == false }
+
+        if segments.isEmpty == false {
+            return segments
+        }
+
+        let text = decoded.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.isEmpty == false else {
+            throw AppError.transcriptionFailed("OpenAI Whisper API で文字起こし結果を取得できませんでした。")
+        }
+        return [RawTranscriptSegment(text: text, startTime: 0, endTime: 0.4)]
+    }
+
+    private func makeMultipartBody(audioURL: URL, boundary: String) throws -> Data {
+        var body = Data()
+        let filename = audioURL.lastPathComponent.isEmpty ? "audio.m4a" : audioURL.lastPathComponent
+        let fileData = try Data(contentsOf: audioURL)
+
+        body.appendMultipartField(name: "model", value: "whisper-1", boundary: boundary)
+        body.appendMultipartField(name: "language", value: "zh", boundary: boundary)
+        body.appendMultipartField(name: "response_format", value: "verbose_json", boundary: boundary)
+        body.appendMultipartField(name: "timestamp_granularities[]", value: "segment", boundary: boundary)
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        body.append("Content-Type: \(mimeType(for: audioURL))\r\n\r\n")
+        body.append(fileData)
+        body.append("\r\n")
+        body.append("--\(boundary)--\r\n")
+        return body
+    }
+
+    private func mimeType(for url: URL) -> String {
+        switch url.pathExtension.lowercased() {
+        case "mp3": "audio/mpeg"
+        case "wav": "audio/wav"
+        case "mp4", "m4a": "audio/mp4"
+        default: "application/octet-stream"
+        }
+    }
+}
+
+private struct OpenAITranscriptionResponse: Decodable {
+    var text: String
+    var segments: [Segment]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        text = try container.decodeIfPresent(String.self, forKey: .text) ?? ""
+        segments = try container.decodeIfPresent([Segment].self, forKey: .segments) ?? []
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case text
+        case segments
+    }
+
+    struct Segment: Decodable {
+        var text: String
+        var start: TimeInterval
+        var end: TimeInterval
+    }
+}
+
+private extension Data {
+    mutating func append(_ string: String) {
+        append(Data(string.utf8))
+    }
+
+    mutating func appendMultipartField(name: String, value: String, boundary: String) {
+        append("--\(boundary)\r\n")
+        append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
+        append("\(value)\r\n")
+    }
+}
+
 struct PreviewSpeechTranscriber: SpeechTranscribing {
     func requestAuthorization() async throws {}
 

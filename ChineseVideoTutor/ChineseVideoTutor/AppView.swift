@@ -30,6 +30,10 @@ enum AppTheme {
 struct AppView: View {
     @StateObject private var viewModel = TranscriptionViewModel()
     @AppStorage("deepl.apiKey") private var apiKey = ""
+    @AppStorage("googleTranslate.apiKey") private var googleTranslateAPIKey = ""
+    @AppStorage("azureTranslate.apiKey") private var azureTranslateAPIKey = ""
+    @AppStorage("azureTranslate.region") private var azureTranslateRegion = ""
+    @AppStorage("openai.apiKey") private var openAIAPIKey = ""
     @AppStorage("whisperkit.model") private var whisperModel = "base"
     @AppStorage("translation.engine") private var translationEngine = "deepl"
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
@@ -117,6 +121,10 @@ struct AppView: View {
         .sheet(isPresented: $isShowingSettings) {
             SettingsView(
                 apiKey: $apiKey,
+                googleTranslateAPIKey: $googleTranslateAPIKey,
+                azureTranslateAPIKey: $azureTranslateAPIKey,
+                azureTranslateRegion: $azureTranslateRegion,
+                openAIAPIKey: $openAIAPIKey,
                 whisperModel: $whisperModel,
                 translationEngine: $translationEngine,
                 transcriptionEngine: $transcriptionEngine,
@@ -152,6 +160,18 @@ struct AppView: View {
         .onChange(of: apiKey) { _, newValue in
             configureViewModelServices(apiKey: newValue)
         }
+        .onChange(of: googleTranslateAPIKey) { _, newValue in
+            configureViewModelServices(googleTranslateAPIKey: newValue)
+        }
+        .onChange(of: azureTranslateAPIKey) { _, newValue in
+            configureViewModelServices(azureTranslateAPIKey: newValue)
+        }
+        .onChange(of: azureTranslateRegion) { _, newValue in
+            configureViewModelServices(azureTranslateRegion: newValue)
+        }
+        .onChange(of: openAIAPIKey) { _, newValue in
+            configureViewModelServices(openAIAPIKey: newValue)
+        }
         .onChange(of: whisperModel) { _, newValue in
             configureViewModelServices(whisperModel: newValue)
         }
@@ -177,6 +197,10 @@ struct AppView: View {
 
     private func configureViewModelServices(
         apiKey: String? = nil,
+        googleTranslateAPIKey: String? = nil,
+        azureTranslateAPIKey: String? = nil,
+        azureTranslateRegion: String? = nil,
+        openAIAPIKey: String? = nil,
         whisperModel: String? = nil,
         translationEngine: String? = nil,
         transcriptionEngine: String? = nil,
@@ -184,6 +208,10 @@ struct AppView: View {
     ) {
         viewModel.configureServices(
             apiKey: apiKey ?? self.apiKey,
+            googleTranslateAPIKey: googleTranslateAPIKey ?? self.googleTranslateAPIKey,
+            azureTranslateAPIKey: azureTranslateAPIKey ?? self.azureTranslateAPIKey,
+            azureTranslateRegion: azureTranslateRegion ?? self.azureTranslateRegion,
+            openAIAPIKey: openAIAPIKey ?? self.openAIAPIKey,
             whisperModel: whisperModel ?? self.whisperModel,
             translationEngine: translationEngine ?? self.translationEngine,
             transcriptionEngine: transcriptionEngine ?? self.transcriptionEngine,
@@ -303,6 +331,11 @@ private struct ImportHomeView: View {
                         }
                     }
                 }
+
+                if selectedMenu == .history {
+                    HistoryBannerAdView()
+                        .padding(.top, 4)
+                }
             }
             .padding()
         }
@@ -356,6 +389,34 @@ private struct SearchField: View {
         .padding(.horizontal, 14)
         .frame(height: 42)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+private struct HistoryBannerAdView: View {
+    #if DEBUG
+    private let adUnitID = "ca-app-pub-3940256099942544/2934735716"
+    #else
+    private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
+    #endif
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("広告")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+            RoundedRectangle(cornerRadius: 8)
+                .fill(AppTheme.accentSoft)
+                .overlay {
+                    HorizontalAdBannerView(adUnitID: adUnitID)
+                        .frame(width: 320, height: 50)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 58)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(AppTheme.accentStroke, lineWidth: 1)
+                }
+        }
     }
 }
 

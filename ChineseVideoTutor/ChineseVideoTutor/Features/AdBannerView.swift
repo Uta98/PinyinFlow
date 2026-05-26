@@ -17,7 +17,7 @@ struct AdBannerView: UIViewControllerRepresentable {
     let adUnitID: String
 
     func makeUIViewController(context: Context) -> BannerViewController {
-        let viewController = BannerViewController()
+        let viewController = BannerViewController(adSize: AdSizeMediumRectangle)
         viewController.adUnitID = adUnitID
         return viewController
     }
@@ -30,8 +30,18 @@ struct AdBannerView: UIViewControllerRepresentable {
 
 final class BannerViewController: UIViewController {
     var adUnitID: String = ""
-    private let bannerView = BannerView(adSize: AdSizeMediumRectangle)
+    private let bannerView: BannerView
     private var didLoadAd = false
+
+    init(adSize: AdSize) {
+        bannerView = BannerView(adSize: adSize)
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,6 +66,21 @@ final class BannerViewController: UIViewController {
         bannerView.adUnitID = adUnitID
         bannerView.rootViewController = self
         bannerView.load(Request())
+    }
+}
+
+struct HorizontalAdBannerView: UIViewControllerRepresentable {
+    let adUnitID: String
+
+    func makeUIViewController(context: Context) -> BannerViewController {
+        let viewController = BannerViewController(adSize: AdSizeBanner)
+        viewController.adUnitID = adUnitID
+        return viewController
+    }
+
+    func updateUIViewController(_ viewController: BannerViewController, context: Context) {
+        viewController.adUnitID = adUnitID
+        viewController.loadAdIfNeeded()
     }
 }
 

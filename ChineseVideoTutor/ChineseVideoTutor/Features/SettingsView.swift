@@ -2,6 +2,10 @@ import SwiftUI
 
 struct SettingsView: View {
     @Binding var apiKey: String
+    @Binding var googleTranslateAPIKey: String
+    @Binding var azureTranslateAPIKey: String
+    @Binding var azureTranslateRegion: String
+    @Binding var openAIAPIKey: String
     @Binding var whisperModel: String
     @Binding var translationEngine: String
     @Binding var transcriptionEngine: String
@@ -24,11 +28,14 @@ struct SettingsView: View {
     ]
     private let translationEngines = [
         ("ios", "iOS純正"),
-        ("deepl", "DeepL")
+        ("deepl", "DeepL"),
+        ("google", "Google Cloud Translation"),
+        ("azure", "Azure AI Translator")
     ]
     private let transcriptionEngines = [
         ("ios", "iOS純正"),
-        ("whisperkit", "WhisperKit")
+        ("whisperkit", "WhisperKit"),
+        ("openai", "OpenAI Whisper API")
     ]
 
     private var textSizeSelection: Binding<Double> {
@@ -58,13 +65,32 @@ struct SettingsView: View {
 
                     if translationEngine == "deepl" {
                         NavigationLink("DeepL APIキー") {
-                            DeepLAPIKeySettingsView(apiKey: $apiKey)
+                            APIKeySettingsView(
+                                title: "DeepL APIキー",
+                                apiKey: $apiKey,
+                                note: "DeepLを使う場合のみ設定します。iOS純正翻訳を使う場合、このキーは不要です。"
+                            )
+                        }
+                    } else if translationEngine == "google" {
+                        NavigationLink("Google Cloud APIキー") {
+                            APIKeySettingsView(
+                                title: "Google Cloud APIキー",
+                                apiKey: $googleTranslateAPIKey,
+                                note: "Cloud Translation API を有効化したGoogle CloudプロジェクトのAPIキーを設定します。"
+                            )
+                        }
+                    } else if translationEngine == "azure" {
+                        NavigationLink("Azure Translator API") {
+                            AzureTranslatorSettingsView(
+                                apiKey: $azureTranslateAPIKey,
+                                region: $azureTranslateRegion
+                            )
                         }
                     }
                 } header: {
                     Text("翻訳ツール")
                 } footer: {
-                    SettingsDescriptionText("DeepLはAPIキーを使って翻訳します。iOS純正翻訳は端末の対応状況と言語モデルに依存します。")
+                    SettingsDescriptionText("iOS純正は端末の対応状況に依存します。DeepL、Google Cloud、Azureは各サービスへ中国語テキストを送信して翻訳します。")
                 }
 
                 Section {
@@ -80,11 +106,19 @@ struct SettingsView: View {
                                 Text(model).tag(model)
                             }
                         }
+                    } else if transcriptionEngine == "openai" {
+                        NavigationLink("OpenAI APIキー") {
+                            APIKeySettingsView(
+                                title: "OpenAI APIキー",
+                                apiKey: $openAIAPIKey,
+                                note: "OpenAI Whisper APIを使う場合のみ設定します。音声データをOpenAI APIへ送信して文字起こしします。"
+                            )
+                        }
                     }
                 } header: {
                     Text("文字起こしツール")
                 } footer: {
-                    SettingsDescriptionText("WhisperKitは端末内で文字起こしします。iOS純正はSpeechフレームワークを使うため、音声認識の許可と端末/言語の対応状況に依存します。")
+                    SettingsDescriptionText("WhisperKitは端末内で処理します。iOS純正はSpeechフレームワーク、OpenAI Whisper APIはクラウド文字起こしを使います。")
                 }
 
                 Section("表示") {
@@ -141,23 +175,50 @@ private struct SettingsDescriptionText: View {
     }
 }
 
-private struct DeepLAPIKeySettingsView: View {
+private struct APIKeySettingsView: View {
+    let title: String
     @Binding var apiKey: String
+    let note: String
 
     var body: some View {
         Form {
-            Section("DeepL APIキー") {
+            Section(title) {
                 SecureField("API Key", text: $apiKey)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
 
             Section {
-                Text("DeepLを使う場合のみ設定します。iOS純正翻訳を使う場合、このキーは不要です。")
+                Text(note)
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle("DeepL APIキー")
+        .navigationTitle(title)
+    }
+}
+
+private struct AzureTranslatorSettingsView: View {
+    @Binding var apiKey: String
+    @Binding var region: String
+
+    var body: some View {
+        Form {
+            Section("Azure Translator API") {
+                SecureField("Subscription Key", text: $apiKey)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+
+                TextField("Region 例: japaneast", text: $region)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+
+            Section {
+                Text("Azure AI Translator リソースのキーとリージョンを設定します。")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("Azure Translator API")
     }
 }
 
