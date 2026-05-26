@@ -7,23 +7,23 @@ import UniformTypeIdentifiers
 enum AppTheme {
     static let accent = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 1)
-            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 1)
+            ? UIColor(red: 1.00, green: 0.18, blue: 0.20, alpha: 1)
+            : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 1)
     })
     static let accentSoft = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 0.18)
-            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 0.10)
+            ? UIColor(red: 1.00, green: 0.18, blue: 0.20, alpha: 0.20)
+            : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 0.11)
     })
     static let accentStroke = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 1.00, green: 0.39, blue: 0.35, alpha: 0.46)
-            : UIColor(red: 0.70, green: 0.08, blue: 0.10, alpha: 0.34)
+            ? UIColor(red: 1.00, green: 0.28, blue: 0.30, alpha: 0.50)
+            : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 0.36)
     })
     static let textCardSurface = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.20, green: 0.08, blue: 0.08, alpha: 1)
-            : UIColor(red: 0.99, green: 0.92, blue: 0.90, alpha: 1)
+            ? UIColor(red: 0.18, green: 0.04, blue: 0.05, alpha: 1)
+            : UIColor(red: 1.00, green: 0.91, blue: 0.91, alpha: 1)
     })
 }
 
