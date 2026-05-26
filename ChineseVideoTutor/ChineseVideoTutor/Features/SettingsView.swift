@@ -141,7 +141,7 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
-                Section("App Store公開準備") {
+                Section("サポートと情報") {
                     NavigationLink("プライバシーとデータ利用") {
                         PrivacyInfoView()
                     }
@@ -154,11 +154,6 @@ struct SettingsView: View {
                     NavigationLink("お問い合わせ") {
                         ContactInfoView()
                     }
-                    NavigationLink("公開前チェックリスト") {
-                        ReleaseChecklistView()
-                    }
-                    Link("App Store Review Guidelines", destination: URL(string: "https://developer.apple.com/app-store/review/guidelines/")!)
-                    Link("App Privacy Details", destination: URL(string: "https://developer.apple.com/app-store/app-privacy-details/")!)
                 }
 
                 Section("アプリ情報") {
@@ -247,22 +242,23 @@ private struct AzureTranslatorSettingsView: View {
 
 private struct PrivacyInfoView: View {
     var body: some View {
-        List {
-            Section("端末内に保存するデータ") {
-                Text("取り込んだ動画・音声、入力した中国語テキスト、文字起こし、拼音、翻訳、お気に入り状態をアプリ内のDocuments領域に保存します。")
-            }
-
-            Section("外部サービス") {
-                Text("DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。")
-            }
-
-            Section("広告") {
-                Text("Google Mobile Ads SDKを使って広告を表示します。広告配信に関するデータの扱いは、GoogleおよびAdMobの設定に従います。")
-            }
-
-            Section("権限") {
-                Text("iOS純正の音声認識を使う場合、音声認識の許可が必要です。写真から動画を選ぶ場合は写真ライブラリの選択UIを使用します。")
-            }
+        SettingsTextPage {
+            SettingsTextBlock(
+                title: "端末内に保存するデータ",
+                text: "取り込んだ動画・音声、入力した中国語テキスト、文字起こし、拼音、翻訳、お気に入り状態をアプリ内のDocuments領域に保存します。"
+            )
+            SettingsTextBlock(
+                title: "外部サービス",
+                text: "DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。"
+            )
+            SettingsTextBlock(
+                title: "広告",
+                text: "Google Mobile Ads SDKを使って広告を表示します。広告配信に関するデータの扱いは、GoogleおよびAdMobの設定に従います。"
+            )
+            SettingsTextBlock(
+                title: "権限",
+                text: "iOS純正の音声認識を使う場合、音声認識の許可が必要です。写真から動画を選ぶ場合は写真ライブラリの選択UIを使用します。"
+            )
         }
         .navigationTitle("プライバシー")
     }
@@ -270,22 +266,23 @@ private struct PrivacyInfoView: View {
 
 private struct PrivacyPolicyView: View {
     var body: some View {
-        List {
-            Section("収集・保存する情報") {
-                Text("PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。ログイン機能はなく、アカウント情報は収集しません。")
-            }
-
-            Section("外部送信") {
-                Text("設定でクラウド翻訳またはクラウド文字起こしを選択した場合、処理に必要なテキストまたは音声データを選択中の外部サービスへ送信します。APIキーは端末内に保存されます。")
-            }
-
-            Section("広告") {
-                Text("本アプリはGoogle Mobile Ads SDKを利用して広告を表示する場合があります。広告表示に伴うデータの扱いは、Googleのポリシーとユーザーの同意設定に従います。")
-            }
-
-            Section("削除") {
-                Text("履歴の長押し削除により、保存済みの動画・音声・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。")
-            }
+        SettingsTextPage {
+            SettingsTextBlock(
+                title: "収集・保存する情報",
+                text: "PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。ログイン機能はなく、アカウント情報は収集しません。"
+            )
+            SettingsTextBlock(
+                title: "外部送信",
+                text: "設定でクラウド翻訳またはクラウド文字起こしを選択した場合、処理に必要なテキストまたは音声データを選択中の外部サービスへ送信します。APIキーは端末内に保存されます。"
+            )
+            SettingsTextBlock(
+                title: "広告",
+                text: "本アプリはGoogle Mobile Ads SDKを利用して広告を表示する場合があります。広告表示に伴うデータの扱いは、Googleのポリシーとユーザーの同意設定に従います。"
+            )
+            SettingsTextBlock(
+                title: "削除",
+                text: "履歴の長押し削除により、保存済みの動画・音声・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。"
+            )
         }
         .navigationTitle("プライバシーポリシー")
     }
@@ -293,18 +290,19 @@ private struct PrivacyPolicyView: View {
 
 private struct TermsOfUseView: View {
     var body: some View {
-        List {
-            Section("利用目的") {
-                Text("PinyinFlowは、中国語の学習補助を目的として、動画・音声・テキストに拼音と翻訳を付与するアプリです。翻訳や文字起こしの結果は完全性を保証するものではありません。")
-            }
-
-            Section("ユーザーの責任") {
-                Text("取り込む動画・音声・テキストは、ユーザー自身が利用権限を持つものを使用してください。第三者の権利を侵害する利用は禁止します。")
-            }
-
-            Section("外部サービス") {
-                Text("外部APIを利用する場合、各サービスの利用規約、料金、制限が適用されます。APIキーの管理はユーザー自身の責任で行ってください。")
-            }
+        SettingsTextPage {
+            SettingsTextBlock(
+                title: "利用目的",
+                text: "PinyinFlowは、中国語の学習補助を目的として、動画・音声・テキストに拼音と翻訳を付与するアプリです。翻訳や文字起こしの結果は完全性を保証するものではありません。"
+            )
+            SettingsTextBlock(
+                title: "ユーザーの責任",
+                text: "取り込む動画・音声・テキストは、ユーザー自身が利用権限を持つものを使用してください。第三者の権利を侵害する利用は禁止します。"
+            )
+            SettingsTextBlock(
+                title: "外部サービス",
+                text: "外部APIを利用する場合、各サービスの利用規約、料金、制限が適用されます。APIキーの管理はユーザー自身の責任で行ってください。"
+            )
         }
         .navigationTitle("利用規約")
     }
@@ -321,38 +319,55 @@ private struct ContactInfoView: View {
     """
 
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
                 Button {
                     UIPasteboard.general.string = contactTemplate
                 } label: {
                     Label("問い合わせテンプレートをコピー", systemImage: "doc.on.doc")
                 }
-            } footer: {
-                SettingsDescriptionText("App Store Connectに登録するサポートURLまたはメールアドレスを用意したら、この画面の文言も公開用の連絡先に合わせて更新してください。")
+
+                Text("お問い合わせの際は、端末、iOSバージョン、アプリバージョン、発生している内容を添えてください。")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("お問い合わせ")
     }
 }
 
-private struct ReleaseChecklistView: View {
-    private let items = [
-        "Apple Developer Programに登録する",
-        "App Store ConnectでPinyinFlowを作成する",
-        "Bundle ID、カテゴリ、年齢制限、価格、配信地域を設定する",
-        "プライバシーポリシーURLとサポートURLを用意する",
-        "App Privacyの回答を、広告SDKと外部API利用に合わせて入力する",
-        "AdMobの支払い情報、税務情報、アプリ審査を完了する",
-        "実機でファイル、写真、テキスト、履歴、広告、各設定を確認する",
-        "App Store用スクリーンショット、説明文、キーワードを登録する",
-        "TestFlightで少なくとも1回、インストールから主要機能まで確認する"
-    ]
+private struct SettingsTextPage<Content: View>: View {
+    @ViewBuilder let content: Content
 
     var body: some View {
-        List(items, id: \.self) { item in
-            Label(item, systemImage: "checkmark.circle")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                content
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle("公開前チェックリスト")
+        .background(Color(.systemGroupedBackground))
+    }
+}
+
+private struct SettingsTextBlock: View {
+    let title: String
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Text(text)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineSpacing(3)
+        }
     }
 }
