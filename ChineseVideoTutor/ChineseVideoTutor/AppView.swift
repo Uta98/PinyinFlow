@@ -28,7 +28,7 @@ enum AppTheme {
     static let settingsRowBackground = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
             ? UIColor(red: 0.14, green: 0.035, blue: 0.05, alpha: 1)
-            : UIColor(red: 1.00, green: 0.94, blue: 0.94, alpha: 1)
+            : UIColor.white
     })
     static let accentSoft = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
@@ -43,7 +43,7 @@ enum AppTheme {
     static let textCardSurface = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
             ? UIColor(red: 0.16, green: 0.04, blue: 0.052, alpha: 1)
-            : UIColor(red: 1.00, green: 0.925, blue: 0.925, alpha: 1)
+            : UIColor.white
     })
 }
 
@@ -463,12 +463,9 @@ private struct HomeHeaderView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(AppTheme.textCardSurface)
                     .frame(width: 42, height: 42)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay {
-                        Circle()
-                            .stroke(Color.primary.opacity(0.10), lineWidth: 1)
-                    }
+                    .background(AppTheme.titleAccent, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("取り込み")
@@ -476,12 +473,9 @@ private struct HomeHeaderView: View {
             Button(action: showSettings) {
                 Image(systemName: "gearshape")
                     .font(.system(size: 19, weight: .semibold))
+                    .foregroundStyle(AppTheme.textCardSurface)
                     .frame(width: 42, height: 42)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay {
-                        Circle()
-                            .stroke(Color.primary.opacity(0.10), lineWidth: 1)
-                    }
+                    .background(AppTheme.titleAccent, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("設定")
@@ -517,10 +511,6 @@ private struct SearchField: View {
         .padding(.horizontal, 14)
         .frame(height: 42)
         .background(AppTheme.textCardSurface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppTheme.accentStroke.opacity(0.55), lineWidth: 1)
-        }
     }
 }
 
@@ -673,10 +663,6 @@ private struct FavoriteSubtitleRow: View {
         }
         .padding(12)
         .background(AppTheme.textCardSurface)
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(AppTheme.accentStroke.opacity(0.45), lineWidth: 1)
-        }
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contextMenu {
             Button {
@@ -806,10 +792,6 @@ private struct SearchResultRow: View {
             }
             .padding(10)
             .background(AppTheme.textCardSurface)
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(AppTheme.accentStroke.opacity(0.45), lineWidth: 1)
-            }
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
