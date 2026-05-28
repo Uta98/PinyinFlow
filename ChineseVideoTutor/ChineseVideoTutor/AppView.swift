@@ -17,7 +17,7 @@ enum AppTheme {
     })
     static let appBackground = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.07, green: 0.02, blue: 0.025, alpha: 1)
+            ? UIColor(red: 0.12, green: 0.035, blue: 0.045, alpha: 1)
             : UIColor(red: 1.00, green: 0.965, blue: 0.965, alpha: 1)
     })
     static let accentSoft = Color(UIColor { traits in

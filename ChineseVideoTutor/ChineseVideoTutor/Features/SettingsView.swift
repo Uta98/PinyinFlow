@@ -161,6 +161,8 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("設定")
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.appBackground)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完了") {
@@ -169,6 +171,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .tint(AppTheme.accent)
     }
 
     private var appVersionText: String {
@@ -212,6 +215,9 @@ private struct APIKeySettingsView: View {
             }
         }
         .navigationTitle(title)
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.appBackground)
+        .tint(AppTheme.accent)
     }
 }
 
@@ -237,6 +243,9 @@ private struct AzureTranslatorSettingsView: View {
             }
         }
         .navigationTitle("Azure Translator API")
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.appBackground)
+        .tint(AppTheme.accent)
     }
 }
 
@@ -269,7 +278,7 @@ private struct PrivacyPolicyView: View {
         SettingsTextPage {
             SettingsTextBlock(
                 title: "収集・保存する情報",
-                text: "PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。ログイン機能はなく、アカウント情報は収集しません。"
+                text: "PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。"
             )
             SettingsTextBlock(
                 title: "外部送信",
@@ -309,33 +318,43 @@ private struct TermsOfUseView: View {
 }
 
 private struct ContactInfoView: View {
-    private let contactTemplate = """
-    PinyinFlow お問い合わせ
-
-    端末:
-    iOS:
-    アプリバージョン:
-    内容:
-    """
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Button {
-                    UIPasteboard.general.string = contactTemplate
+                    UIApplication.shared.open(mailURL)
                 } label: {
-                    Label("問い合わせテンプレートをコピー", systemImage: "doc.on.doc")
+                    Label("メールで問い合わせる", systemImage: "envelope")
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.accent)
 
-                Text("お問い合わせの際は、端末、iOSバージョン、アプリバージョン、発生している内容を添えてください。")
+                Text("メールアプリを開きます。端末、iOSバージョン、アプリバージョン、発生している内容を添えて送信してください。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.appBackground)
         .navigationTitle("お問い合わせ")
+    }
+
+    private var mailURL: URL {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "PinyinFlow お問い合わせ"),
+            URLQueryItem(name: "body", value: """
+            PinyinFlow お問い合わせ
+
+            端末:
+            iOS:
+            アプリバージョン:
+            内容:
+            """)
+        ]
+        return components.url!
     }
 }
 
@@ -350,7 +369,7 @@ private struct SettingsTextPage<Content: View>: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.appBackground)
     }
 }
 
