@@ -95,6 +95,7 @@ struct SettingsView: View {
                 } footer: {
                     SettingsDescriptionText("iOS純正は端末の対応状況に依存します。DeepL、Google Cloud、Azureは各サービスへ中国語テキストを送信して翻訳します。")
                 }
+                .listRowBackground(AppTheme.settingsRowBackground)
 
                 Section {
                     Picker("ツール", selection: $transcriptionEngine) {
@@ -131,6 +132,7 @@ struct SettingsView: View {
                 } footer: {
                     SettingsDescriptionText("WhisperKitは端末内で処理します。iOS純正はSpeechフレームワーク、OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使います。")
                 }
+                .listRowBackground(AppTheme.settingsRowBackground)
 
                 Section("表示") {
                     Picker("文字サイズ", selection: textSizeSelection) {
@@ -140,6 +142,7 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .listRowBackground(AppTheme.settingsRowBackground)
 
                 Section("サポートと情報") {
                     NavigationLink("プライバシーとデータ利用") {
@@ -155,10 +158,12 @@ struct SettingsView: View {
                         ContactInfoView()
                     }
                 }
+                .listRowBackground(AppTheme.settingsRowBackground)
 
                 Section("アプリ情報") {
                     LabeledContent("バージョン", value: appVersionText)
                 }
+                .listRowBackground(AppTheme.settingsRowBackground)
             }
             .navigationTitle("設定")
             .scrollContentBackground(.hidden)
@@ -208,11 +213,13 @@ private struct APIKeySettingsView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
+            .listRowBackground(AppTheme.settingsRowBackground)
 
             Section {
                 Text(note)
                     .foregroundStyle(.secondary)
             }
+            .listRowBackground(AppTheme.settingsRowBackground)
         }
         .navigationTitle(title)
         .scrollContentBackground(.hidden)
@@ -236,11 +243,13 @@ private struct AzureTranslatorSettingsView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
+            .listRowBackground(AppTheme.settingsRowBackground)
 
             Section {
                 Text("Azure AI Translator リソースのキーとリージョンを設定します。")
                     .foregroundStyle(.secondary)
             }
+            .listRowBackground(AppTheme.settingsRowBackground)
         }
         .navigationTitle("Azure Translator API")
         .scrollContentBackground(.hidden)

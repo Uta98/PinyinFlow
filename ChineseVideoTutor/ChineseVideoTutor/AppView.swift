@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 enum AppTheme {
     static let titleAccent = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 1.00, green: 0.22, blue: 0.24, alpha: 1)
+            ? UIColor(red: 1.00, green: 0.965, blue: 0.965, alpha: 1)
             : UIColor(red: 0.48, green: 0.00, blue: 0.04, alpha: 1)
     })
     static let accent = Color(UIColor { traits in
@@ -17,8 +17,13 @@ enum AppTheme {
     })
     static let appBackground = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.12, green: 0.035, blue: 0.045, alpha: 1)
+            ? UIColor(red: 0.09, green: 0.025, blue: 0.035, alpha: 1)
             : UIColor(red: 1.00, green: 0.965, blue: 0.965, alpha: 1)
+    })
+    static let settingsRowBackground = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.14, green: 0.035, blue: 0.05, alpha: 1)
+            : UIColor(red: 1.00, green: 0.94, blue: 0.94, alpha: 1)
     })
     static let accentSoft = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
@@ -72,43 +77,22 @@ struct AppView: View {
                             viewModel.loadSession(session, startTime: startTime)
                         },
                         deleteSession: viewModel.deleteSession,
-                        toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:)
+                        toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:),
+                        importFile: {
+                            isImportingVideo = true
+                        },
+                        importPhoto: {
+                            isShowingPhotoPicker = true
+                        },
+                        importText: {
+                            isShowingTextSheet = true
+                        },
+                        showSettings: {
+                            isShowingSettings = true
+                        }
                     )
                     .navigationTitle("")
                     .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .topBarTrailing) {
-                            Menu {
-                                Button {
-                                    isImportingVideo = true
-                                } label: {
-                                    Label("ファイル", systemImage: "folder")
-                                }
-
-                                Button {
-                                    isShowingPhotoPicker = true
-                                } label: {
-                                    Label("写真", systemImage: "photo.on.rectangle")
-                                }
-
-                                Button {
-                                    isShowingTextSheet = true
-                                } label: {
-                                    Label("テキスト", systemImage: "text.quote")
-                                }
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                            .accessibilityLabel("取り込み")
-
-                            Button {
-                                isShowingSettings = true
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
-                            .accessibilityLabel("設定")
-                        }
-                    }
                 }
             } else {
                 TranscriptWorkspaceView(
@@ -291,6 +275,10 @@ private struct ImportHomeView: View {
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let deleteSession: (TranscriptSession) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
+    let importFile: () -> Void
+    let importPhoto: () -> Void
+    let importText: () -> Void
+    let showSettings: () -> Void
     @State private var sessionPendingDeletion: TranscriptSession?
     @State private var selectedMenu: MainMenu = .history
 
@@ -337,7 +325,12 @@ private struct ImportHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                AppTitleView()
+                HomeHeaderView(
+                    importFile: importFile,
+                    importPhoto: importPhoto,
+                    importText: importText,
+                    showSettings: showSettings
+                )
 
                 SearchField(text: $searchText)
 
@@ -437,6 +430,58 @@ private struct AppTitleView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.78)
             .accessibilityAddTraits(.isHeader)
+    }
+}
+
+private struct HomeHeaderView: View {
+    let importFile: () -> Void
+    let importPhoto: () -> Void
+    let importText: () -> Void
+    let showSettings: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            AppTitleView()
+
+            Spacer(minLength: 8)
+
+            Menu {
+                Button(action: importFile) {
+                    Label("ファイル", systemImage: "folder")
+                }
+                Button(action: importPhoto) {
+                    Label("写真", systemImage: "photo.on.rectangle")
+                }
+                Button(action: importText) {
+                    Label("テキスト", systemImage: "text.quote")
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 18, weight: .bold))
+                    .frame(width: 42, height: 42)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(Color.primary.opacity(0.10), lineWidth: 1)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("取り込み")
+
+            Button(action: showSettings) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 19, weight: .semibold))
+                    .frame(width: 42, height: 42)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(Color.primary.opacity(0.10), lineWidth: 1)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("設定")
+        }
+        .padding(.top, 4)
     }
 }
 
