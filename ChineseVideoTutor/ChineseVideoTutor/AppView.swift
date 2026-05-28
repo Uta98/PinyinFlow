@@ -5,10 +5,20 @@ import UIKit
 import UniformTypeIdentifiers
 
 enum AppTheme {
+    static let titleAccent = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.22, blue: 0.24, alpha: 1)
+            : UIColor(red: 0.48, green: 0.00, blue: 0.04, alpha: 1)
+    })
     static let accent = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
             ? UIColor(red: 1.00, green: 0.18, blue: 0.20, alpha: 1)
             : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 1)
+    })
+    static let appBackground = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.07, green: 0.02, blue: 0.025, alpha: 1)
+            : UIColor(red: 1.00, green: 0.965, blue: 0.965, alpha: 1)
     })
     static let accentSoft = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
@@ -64,7 +74,8 @@ struct AppView: View {
                         deleteSession: viewModel.deleteSession,
                         toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:)
                     )
-                    .navigationTitle("PinyinFlow")
+                    .navigationTitle("")
+                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             Menu {
@@ -326,6 +337,8 @@ private struct ImportHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                AppTitleView()
+
                 SearchField(text: $searchText)
 
                 Picker("メニュー", selection: $selectedMenu) {
@@ -392,7 +405,7 @@ private struct ImportHomeView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.appBackground)
         .alert("動画を削除しますか？", isPresented: Binding(
             get: { sessionPendingDeletion != nil },
             set: { isPresented in
@@ -413,6 +426,17 @@ private struct ImportHomeView: View {
         } message: {
             Text("保存済みの動画と字幕を履歴から削除します。")
         }
+    }
+}
+
+private struct AppTitleView: View {
+    var body: some View {
+        Text("PinyinFlow")
+            .font(.system(size: 42, weight: .heavy, design: .rounded))
+            .foregroundStyle(AppTheme.titleAccent)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
