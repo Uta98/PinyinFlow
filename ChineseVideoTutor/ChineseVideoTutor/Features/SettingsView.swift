@@ -176,7 +176,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .tint(AppTheme.accent)
+        .tint(AppTheme.settingsAccent)
     }
 
     private var appVersionText: String {
@@ -224,7 +224,7 @@ private struct APIKeySettingsView: View {
         .navigationTitle(title)
         .scrollContentBackground(.hidden)
         .background(AppTheme.appBackground)
-        .tint(AppTheme.accent)
+        .tint(AppTheme.settingsAccent)
     }
 }
 
@@ -254,7 +254,7 @@ private struct AzureTranslatorSettingsView: View {
         .navigationTitle("Azure Translator API")
         .scrollContentBackground(.hidden)
         .background(AppTheme.appBackground)
-        .tint(AppTheme.accent)
+        .tint(AppTheme.settingsAccent)
     }
 }
 
@@ -336,7 +336,7 @@ private struct ContactInfoView: View {
                     Label("メールで問い合わせる", systemImage: "envelope")
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(AppTheme.accent)
+                .tint(AppTheme.settingsAccent)
 
                 Text("メールアプリを開きます。端末、iOSバージョン、アプリバージョン、発生している内容を添えて送信してください。")
                     .font(.footnote)

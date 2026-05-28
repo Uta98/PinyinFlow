@@ -15,6 +15,11 @@ enum AppTheme {
             ? UIColor(red: 1.00, green: 0.18, blue: 0.20, alpha: 1)
             : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 1)
     })
+    static let settingsAccent = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.58, blue: 0.60, alpha: 1)
+            : UIColor(red: 0.78, green: 0.00, blue: 0.06, alpha: 1)
+    })
     static let appBackground = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
             ? UIColor(red: 0.09, green: 0.025, blue: 0.035, alpha: 1)
@@ -37,8 +42,8 @@ enum AppTheme {
     })
     static let textCardSurface = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.18, green: 0.04, blue: 0.05, alpha: 1)
-            : UIColor(red: 1.00, green: 0.91, blue: 0.91, alpha: 1)
+            ? UIColor(red: 0.16, green: 0.04, blue: 0.052, alpha: 1)
+            : UIColor(red: 1.00, green: 0.925, blue: 0.925, alpha: 1)
     })
 }
 
@@ -496,6 +501,7 @@ private struct SearchField: View {
             TextField("中国語・拼音・翻訳を検索", text: $text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .foregroundStyle(.primary)
 
             if text.isEmpty == false {
                 Button {
@@ -510,7 +516,11 @@ private struct SearchField: View {
         }
         .padding(.horizontal, 14)
         .frame(height: 42)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .background(AppTheme.textCardSurface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(AppTheme.accentStroke.opacity(0.55), lineWidth: 1)
+        }
     }
 }
 
@@ -662,7 +672,11 @@ private struct FavoriteSubtitleRow: View {
             .buttonStyle(.plain)
         }
         .padding(12)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.textCardSurface)
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(AppTheme.accentStroke.opacity(0.45), lineWidth: 1)
+        }
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contextMenu {
             Button {
@@ -717,6 +731,7 @@ private struct HistoryTile: View {
                 }
             }
             .aspectRatio(9.0 / 16.0, contentMode: .fit)
+            .background(AppTheme.textCardSurface)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
@@ -790,7 +805,11 @@ private struct SearchResultRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(10)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(AppTheme.textCardSurface)
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(AppTheme.accentStroke.opacity(0.45), lineWidth: 1)
+            }
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
