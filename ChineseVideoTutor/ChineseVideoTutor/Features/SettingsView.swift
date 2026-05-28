@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Binding var transcriptionEngine: String
     @Binding var translationTarget: String
     @Binding var textScale: Double
+    var showsDoneButton = true
     @Environment(\.dismiss) private var dismiss
 
     private let whisperModels = [
@@ -169,9 +170,11 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(AppTheme.appBackground)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完了") {
-                        dismiss()
+                if showsDoneButton {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("完了") {
+                            dismiss()
+                        }
                     }
                 }
             }

@@ -62,7 +62,6 @@ struct AppView: View {
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
-    @State private var isShowingSettings = false
     @State private var isShowingTextSheet = false
     @State private var isShowingPhotoPicker = false
     @State private var isImportingVideo = false
@@ -73,32 +72,64 @@ struct AppView: View {
     var body: some View {
         Group {
             if viewModel.shouldShowWorkspace == false {
-                NavigationStack {
-                    ImportHomeView(
+                TabView {
+                    NavigationStack {
+                        ImportHomeView(
+                            history: viewModel.history,
+                            textScale: textScale,
+                            searchText: $homeSearchText,
+                            openSession: { session, startTime in
+                                viewModel.loadSession(session, startTime: startTime)
+                            },
+                            deleteSession: viewModel.deleteSession,
+                            importFile: {
+                                isImportingVideo = true
+                            },
+                            importPhoto: {
+                                isShowingPhotoPicker = true
+                            },
+                            importText: {
+                                isShowingTextSheet = true
+                            }
+                        )
+                        .navigationTitle("")
+                        .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .tabItem {
+                        Label("ホーム", systemImage: "house")
+                    }
+
+                    FavoritesHomeView(
                         history: viewModel.history,
                         textScale: textScale,
-                        searchText: $homeSearchText,
                         openSession: { session, startTime in
                             viewModel.loadSession(session, startTime: startTime)
                         },
-                        deleteSession: viewModel.deleteSession,
-                        toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:),
-                        importFile: {
-                            isImportingVideo = true
-                        },
-                        importPhoto: {
-                            isShowingPhotoPicker = true
-                        },
-                        importText: {
-                            isShowingTextSheet = true
-                        },
-                        showSettings: {
-                            isShowingSettings = true
-                        }
+                        toggleFavorite: viewModel.toggleFavorite(sessionID:segmentID:)
                     )
-                    .navigationTitle("")
-                    .navigationBarTitleDisplayMode(.inline)
+                    .tabItem {
+                        Label("お気に入り", systemImage: "star")
+                    }
+
+                    SettingsView(
+                        apiKey: $apiKey,
+                        googleTranslateAPIKey: $googleTranslateAPIKey,
+                        azureTranslateAPIKey: $azureTranslateAPIKey,
+                        azureTranslateRegion: $azureTranslateRegion,
+                        openAIAPIKey: $openAIAPIKey,
+                        assemblyAIAPIKey: $assemblyAIAPIKey,
+                        whisperModel: $whisperModel,
+                        translationEngine: $translationEngine,
+                        transcriptionEngine: $transcriptionEngine,
+                        translationTarget: $translationTarget,
+                        textScale: $textScale,
+                        showsDoneButton: false
+                    )
+                    .tabItem {
+                        Label("設定", systemImage: "gearshape")
+                    }
                 }
+                .tint(AppTheme.settingsAccent)
             } else {
                 TranscriptWorkspaceView(
                     viewModel: viewModel,
@@ -120,21 +151,6 @@ struct AppView: View {
             selection: $selectedPhotoItem,
             matching: .videos
         )
-        .sheet(isPresented: $isShowingSettings) {
-            SettingsView(
-                apiKey: $apiKey,
-                googleTranslateAPIKey: $googleTranslateAPIKey,
-                azureTranslateAPIKey: $azureTranslateAPIKey,
-                azureTranslateRegion: $azureTranslateRegion,
-                openAIAPIKey: $openAIAPIKey,
-                assemblyAIAPIKey: $assemblyAIAPIKey,
-                whisperModel: $whisperModel,
-                translationEngine: $translationEngine,
-                transcriptionEngine: $transcriptionEngine,
-                translationTarget: $translationTarget,
-                textScale: $textScale
-            )
-        }
         .sheet(isPresented: Binding(
             get: { privacyAccepted == false },
             set: { isPresented in
@@ -279,22 +295,12 @@ private struct ImportHomeView: View {
     @Binding var searchText: String
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let deleteSession: (TranscriptSession) -> Void
-    let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
     let importFile: () -> Void
     let importPhoto: () -> Void
     let importText: () -> Void
-    let showSettings: () -> Void
     @State private var sessionPendingDeletion: TranscriptSession?
-    @State private var selectedMenu: MainMenu = .history
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
-
-    private enum MainMenu: String, CaseIterable, Identifiable {
-        case history = "履歴"
-        case favorites = "お気に入り"
-
-        var id: String { rawValue }
-    }
 
     private var query: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -302,28 +308,15 @@ private struct ImportHomeView: View {
 
     private var searchResults: [HistorySearchResult] {
         guard query.isEmpty == false else { return [] }
-        return history.compactMap { session in
-            if let segment = session.segments.first(where: { segment in
-                TranscriptTextCleaner.clean(segment.sourceText).localizedCaseInsensitiveContains(query)
-                    || TranscriptTextCleaner.clean(segment.japaneseTranslation).localizedCaseInsensitiveContains(query)
-                    || segment.pinyinTokens.contains { $0.pinyin.localizedCaseInsensitiveContains(query) }
-            }) {
-                let source = TranscriptTextCleaner.clean(segment.sourceText)
-                let japanese = TranscriptTextCleaner.clean(segment.japaneseTranslation)
-                let matchText = source.localizedCaseInsensitiveContains(query)
-                    ? source
-                    : (japanese.localizedCaseInsensitiveContains(query) ? japanese : source)
-                return HistorySearchResult(session: session, segment: segment, matchText: matchText)
+        return history.flatMap { session in
+            session.segments.compactMap { segment in
+                guard TranscriptSearch.matches(segment, query: query) else { return nil }
+                return HistorySearchResult(
+                    session: session,
+                    segment: segment,
+                    matchText: TranscriptSearch.matchText(for: segment, query: query)
+                )
             }
-            return nil
-        }
-    }
-
-    private var favoriteResults: [FavoriteSubtitleResult] {
-        history.flatMap { session in
-            session.segments
-                .filter(\.isFavorite)
-                .map { FavoriteSubtitleResult(session: session, segment: $0) }
         }
     }
 
@@ -333,26 +326,12 @@ private struct ImportHomeView: View {
                 HomeHeaderView(
                     importFile: importFile,
                     importPhoto: importPhoto,
-                    importText: importText,
-                    showSettings: showSettings
+                    importText: importText
                 )
 
                 SearchField(text: $searchText)
 
-                Picker("メニュー", selection: $selectedMenu) {
-                    ForEach(MainMenu.allCases) { menu in
-                        Text(menu.rawValue).tag(menu)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                if selectedMenu == .favorites {
-                    FavoriteSubtitleList(results: favoriteResults, textScale: textScale) { result in
-                        openSession(result.session, result.segment.startTime)
-                    } toggleFavorite: { result in
-                        toggleFavorite(result.session.id, result.segment.id)
-                    }
-                } else if history.isEmpty {
+                if history.isEmpty {
                     ContentUnavailableView(
                         "履歴はまだありません",
                         systemImage: "clock",
@@ -396,10 +375,8 @@ private struct ImportHomeView: View {
                     }
                 }
 
-                if selectedMenu == .history {
-                    HistoryBannerAdView()
-                        .padding(.top, 4)
-                }
+                HistoryBannerAdView()
+                    .padding(.top, 4)
             }
             .padding()
         }
@@ -442,7 +419,6 @@ private struct HomeHeaderView: View {
     let importFile: () -> Void
     let importPhoto: () -> Void
     let importText: () -> Void
-    let showSettings: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -469,16 +445,6 @@ private struct HomeHeaderView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("取り込み")
-
-            Button(action: showSettings) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(AppTheme.textCardSurface)
-                    .frame(width: 42, height: 42)
-                    .background(AppTheme.titleAccent, in: Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("設定")
         }
         .padding(.top, 4)
     }
@@ -597,6 +563,89 @@ private struct FavoriteSubtitleResult: Identifiable {
     var id: String { "\(session.id)-\(segment.id)" }
     var session: TranscriptSession
     var segment: TranscriptSegment
+}
+
+private enum TranscriptSearch {
+    static func matches(_ segment: TranscriptSegment, query: String) -> Bool {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedQuery.isEmpty == false else { return true }
+
+        return contains(TranscriptTextCleaner.clean(segment.sourceText), query: trimmedQuery)
+            || contains(TranscriptTextCleaner.clean(segment.japaneseTranslation), query: trimmedQuery)
+            || contains(pinyinText(for: segment), query: trimmedQuery)
+    }
+
+    static func matchText(for segment: TranscriptSegment, query: String) -> String {
+        let source = TranscriptTextCleaner.cleanChinese(segment.sourceText)
+        let translation = TranscriptTextCleaner.clean(segment.japaneseTranslation)
+        if contains(translation, query: query), contains(source, query: query) == false {
+            return translation
+        }
+        return source.isEmpty ? translation : source
+    }
+
+    private static func contains(_ text: String, query: String) -> Bool {
+        normalized(text).contains(normalized(query))
+    }
+
+    private static func pinyinText(for segment: TranscriptSegment) -> String {
+        segment.pinyinTokens
+            .map(\.pinyin)
+            .filter { $0.isEmpty == false }
+            .joined(separator: " ")
+    }
+
+    private static func normalized(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: .current)
+            .replacingOccurrences(of: " ", with: "")
+    }
+}
+
+private struct FavoritesHomeView: View {
+    let history: [TranscriptSession]
+    let textScale: Double
+    let openSession: (TranscriptSession, TimeInterval?) -> Void
+    let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
+    @State private var searchText = ""
+
+    private var query: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var favoriteResults: [FavoriteSubtitleResult] {
+        history.flatMap { session in
+            session.segments.compactMap { segment in
+                guard segment.isFavorite else { return nil }
+                guard query.isEmpty || TranscriptSearch.matches(segment, query: query) else { return nil }
+                return FavoriteSubtitleResult(session: session, segment: segment)
+            }
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text("お気に入り")
+                        .font(.system(size: 38, weight: .heavy, design: .rounded))
+                        .foregroundStyle(AppTheme.titleAccent)
+                        .accessibilityAddTraits(.isHeader)
+
+                    SearchField(text: $searchText)
+
+                    FavoriteSubtitleList(results: favoriteResults, textScale: textScale) { result in
+                        openSession(result.session, result.segment.startTime)
+                    } toggleFavorite: { result in
+                        toggleFavorite(result.session.id, result.segment.id)
+                    }
+                }
+                .padding()
+            }
+            .background(AppTheme.appBackground)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
 }
 
 private struct FavoriteSubtitleList: View {
