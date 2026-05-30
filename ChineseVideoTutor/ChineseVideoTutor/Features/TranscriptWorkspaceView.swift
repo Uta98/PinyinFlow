@@ -5,6 +5,9 @@ struct TranscriptWorkspaceView: View {
     @ObservedObject var viewModel: TranscriptionViewModel
     let textScale: Double
     @Binding var playbackRate: Double
+    @Binding var showPinyin: Bool
+    @Binding var showChinese: Bool
+    @Binding var showTranslation: Bool
     @State private var player: AVPlayer?
     @State private var timeObserver: Any?
     @State private var currentTime: TimeInterval = 0
@@ -40,6 +43,15 @@ struct TranscriptWorkspaceView: View {
                     .padding(.leading, 16)
                     .accessibilityLabel("履歴に戻る")
                 }
+                .overlay(alignment: .topTrailing) {
+                    SubtitleDisplayMenu(
+                        showPinyin: $showPinyin,
+                        showChinese: $showChinese,
+                        showTranslation: $showTranslation
+                    )
+                    .padding(.top, 52)
+                    .padding(.trailing, 16)
+                }
 
             if let errorMessage = viewModel.errorMessage {
                 Label(errorMessage, systemImage: "exclamationmark.triangle")
@@ -54,6 +66,9 @@ struct TranscriptWorkspaceView: View {
                 currentTime: currentTime,
                 textScale: textScale,
                 phase: viewModel.phase,
+                showPinyin: showPinyin,
+                showChinese: showChinese,
+                showTranslation: showTranslation,
                 seek: seek(to:),
                 toggleFavorite: { segment in
                     viewModel.toggleFavorite(segmentID: segment.id)
@@ -156,6 +171,27 @@ struct TranscriptWorkspaceView: View {
             player?.removeTimeObserver(timeObserver)
             self.timeObserver = nil
         }
+    }
+}
+
+private struct SubtitleDisplayMenu: View {
+    @Binding var showPinyin: Bool
+    @Binding var showChinese: Bool
+    @Binding var showTranslation: Bool
+
+    var body: some View {
+        Menu {
+            Toggle("拼音", isOn: $showPinyin)
+            Toggle("中国語", isOn: $showChinese)
+            Toggle("日本語訳", isOn: $showTranslation)
+        } label: {
+            Image(systemName: "textformat")
+                .font(.headline)
+                .frame(width: 42, height: 42)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("字幕表示")
     }
 }
 
@@ -276,6 +312,9 @@ private struct TranscriptTimelineView: View {
     let currentTime: TimeInterval
     let textScale: Double
     let phase: ProcessingPhase
+    let showPinyin: Bool
+    let showChinese: Bool
+    let showTranslation: Bool
     let seek: (TranscriptSegment) -> Void
     let toggleFavorite: (TranscriptSegment) -> Void
     let edit: (TranscriptSegment) -> Void
@@ -297,6 +336,9 @@ private struct TranscriptTimelineView: View {
                                 segment: segment,
                                 isActive: segment.id == activeSegmentID,
                                 textScale: textScale,
+                                showPinyin: showPinyin,
+                                showChinese: showChinese,
+                                showTranslation: showTranslation,
                                 seek: { seek(segment) },
                                 toggleFavorite: { toggleFavorite(segment) },
                                 edit: { edit(segment) }
@@ -389,6 +431,9 @@ private struct TranscriptSegmentRow: View {
     let segment: TranscriptSegment
     let isActive: Bool
     let textScale: Double
+    let showPinyin: Bool
+    let showChinese: Bool
+    let showTranslation: Bool
     let seek: () -> Void
     let toggleFavorite: () -> Void
     let edit: () -> Void
@@ -411,12 +456,19 @@ private struct TranscriptSegmentRow: View {
                 seek()
             } label: {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        PinyinFlow(tokens: segment.pinyinTokens, textScale: textScale)
-                        Spacer(minLength: 0)
+                    if showPinyin || showChinese {
+                        HStack {
+                            PinyinFlow(
+                                tokens: segment.pinyinTokens,
+                                textScale: textScale,
+                                showsPinyin: showPinyin,
+                                showsChinese: showChinese
+                            )
+                            Spacer(minLength: 0)
+                        }
                     }
 
-                    if segment.japaneseTranslation.isEmpty == false {
+                    if showTranslation && segment.japaneseTranslation.isEmpty == false {
                         Text(TranscriptTextCleaner.clean(segment.japaneseTranslation))
                             .font(.system(size: 16 * textScale))
                             .foregroundStyle(.secondary)
@@ -446,16 +498,22 @@ private struct TranscriptSegmentRow: View {
 struct PinyinFlow: View {
     let tokens: [PinyinToken]
     let textScale: Double
+    var showsPinyin = true
+    var showsChinese = true
 
     var body: some View {
         FlowLayout(spacing: 8, lineSpacing: 8) {
             ForEach(tokens) { token in
                 VStack(spacing: 2) {
-                    Text(token.pinyin.isEmpty ? " " : token.pinyin)
-                        .font(.system(size: 12 * textScale))
-                        .foregroundStyle(AppTheme.accent)
-                    Text(token.character)
-                        .font(.system(size: 20 * textScale, weight: .bold))
+                    if showsPinyin {
+                        Text(token.pinyin.isEmpty ? " " : token.pinyin)
+                            .font(.system(size: 12 * textScale))
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    if showsChinese {
+                        Text(token.character)
+                            .font(.system(size: 20 * textScale, weight: .bold))
+                    }
                 }
                 .frame(minWidth: 24)
             }

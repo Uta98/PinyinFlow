@@ -60,6 +60,9 @@ struct AppView: View {
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
     @AppStorage("transcription.engine") private var transcriptionEngine = "whisperkit"
     @AppStorage("transcript.textScale") private var textScale = 1.0
+    @AppStorage("subtitle.showPinyin") private var showSubtitlePinyin = true
+    @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
+    @AppStorage("subtitle.showTranslation") private var showSubtitleTranslation = true
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
     @State private var isShowingTextSheet = false
@@ -134,7 +137,10 @@ struct AppView: View {
                 TranscriptWorkspaceView(
                     viewModel: viewModel,
                     textScale: textScale,
-                    playbackRate: $playbackRate
+                    playbackRate: $playbackRate,
+                    showPinyin: $showSubtitlePinyin,
+                    showChinese: $showSubtitleChinese,
+                    showTranslation: $showSubtitleTranslation
                 )
             }
         }
@@ -627,8 +633,10 @@ private struct FavoritesHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     Text("お気に入り")
-                        .font(.system(size: 38, weight: .heavy, design: .rounded))
+                        .font(.system(size: 42, weight: .heavy, design: .rounded))
                         .foregroundStyle(AppTheme.titleAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
                         .accessibilityAddTraits(.isHeader)
 
                     SearchField(text: $searchText)
