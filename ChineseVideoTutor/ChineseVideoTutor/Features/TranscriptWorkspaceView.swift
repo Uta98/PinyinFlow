@@ -178,12 +178,11 @@ private struct SubtitleDisplayMenu: View {
     @Binding var showPinyin: Bool
     @Binding var showChinese: Bool
     @Binding var showTranslation: Bool
+    @State private var isShowingPanel = false
 
     var body: some View {
-        Menu {
-            Toggle("拼音", isOn: $showPinyin)
-            Toggle("中国語", isOn: $showChinese)
-            Toggle("日本語訳", isOn: $showTranslation)
+        Button {
+            isShowingPanel = true
         } label: {
             Image(systemName: "textformat")
                 .font(.headline)
@@ -192,6 +191,30 @@ private struct SubtitleDisplayMenu: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("字幕表示")
+        .popover(isPresented: $isShowingPanel, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("字幕表示")
+                    .font(.headline)
+
+                Toggle("拼音", isOn: $showPinyin)
+                Toggle("中国語", isOn: $showChinese)
+                Toggle("日本語訳", isOn: $showTranslation)
+
+                Button {
+                    isShowingPanel = false
+                } label: {
+                    Text("完了")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.settingsAccent)
+                .padding(.top, 4)
+            }
+            .padding(16)
+            .frame(width: 220)
+            .presentationCompactAdaptation(.popover)
+        }
     }
 }
 
