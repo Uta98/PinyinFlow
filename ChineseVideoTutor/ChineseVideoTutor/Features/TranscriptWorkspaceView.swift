@@ -197,23 +197,17 @@ private struct SubtitleDisplayMenu: View {
                     .font(.headline)
 
                 Toggle("拼音", isOn: $showPinyin)
+                    .tint(AppTheme.settingsAccent)
                 Toggle("中国語", isOn: $showChinese)
+                    .tint(AppTheme.settingsAccent)
                 Toggle("日本語訳", isOn: $showTranslation)
-
-                Button {
-                    isShowingPanel = false
-                } label: {
-                    Text("完了")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.settingsAccent)
-                .padding(.top, 4)
+                    .tint(AppTheme.settingsAccent)
             }
             .padding(16)
             .frame(width: 220)
+            .background(AppTheme.settingsRowBackground)
             .presentationCompactAdaptation(.popover)
+            .presentationBackground(AppTheme.settingsRowBackground)
         }
     }
 }
