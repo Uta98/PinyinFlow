@@ -14,6 +14,7 @@ struct TranscriptWorkspaceView: View {
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
     @State private var processingAdTriggerID = UUID()
+    @State private var shouldShowProcessingInterstitial = true
 
     private var playerRate: Float {
         Float(playbackRate)
@@ -95,8 +96,10 @@ struct TranscriptWorkspaceView: View {
         .background(Color(.systemGroupedBackground))
         .tint(AppTheme.accent)
         .overlay(alignment: .bottom) {
-            if viewModel.phase.isBusy {
-                WaitingAdSlotView(triggerID: processingAdTriggerID)
+            if viewModel.phase.isBusy, shouldShowProcessingInterstitial {
+                WaitingAdSlotView(triggerID: processingAdTriggerID) {
+                    shouldShowProcessingInterstitial = false
+                }
                     .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
             }
@@ -109,7 +112,7 @@ struct TranscriptWorkspaceView: View {
             configurePlayer(for: url)
         }
         .onChange(of: viewModel.phase) { _, _ in
-            if viewModel.phase.isBusy {
+            if viewModel.phase.isBusy, shouldShowProcessingInterstitial {
                 processingAdTriggerID = UUID()
             }
             configurePlayer(for: viewModel.selectedVideoURL)
@@ -414,6 +417,7 @@ private struct ProcessingSkeletonView: View {
 private struct WaitingAdSlotView: View {
     private let adUnitID = AdMobAdUnits.interstitial
     let triggerID: UUID
+    let markAttached: () -> Void
 
     enum Style {
         case light
@@ -424,6 +428,11 @@ private struct WaitingAdSlotView: View {
         InterstitialAdTriggerView(adUnitID: adUnitID, triggerID: triggerID)
             .frame(width: 1, height: 1)
             .accessibilityHidden(true)
+            .onAppear {
+                DispatchQueue.main.async {
+                    markAttached()
+                }
+            }
     }
 }
 
