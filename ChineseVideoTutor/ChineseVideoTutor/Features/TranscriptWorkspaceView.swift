@@ -410,11 +410,7 @@ private struct ProcessingSkeletonView: View {
 }
 
 private struct WaitingAdSlotView: View {
-    #if DEBUG
-    private let adUnitID = "ca-app-pub-3940256099942544/2435281174"
-    #else
     private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
-    #endif
 
     enum Style {
         case light

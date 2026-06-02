@@ -271,7 +271,6 @@ private struct FirstLaunchPrivacyView: View {
                 Section {
                     Label("動画・音声・テキスト、字幕、拼音、翻訳、お気に入りは端末内に保存されます。", systemImage: "iphone")
                     Label("クラウド翻訳やクラウド文字起こしを選ぶと、対象データが選択した外部サービスへ送信されます。", systemImage: "cloud")
-                    Label("無料で使えるようにするため、処理中や履歴画面に広告を表示することがあります。", systemImage: "rectangle.and.text.magnifyingglass")
                 } header: {
                     Text("PinyinFlowのデータ利用")
                 }
@@ -487,11 +486,7 @@ private struct SearchField: View {
 }
 
 private struct HistoryBannerAdView: View {
-    #if DEBUG
-    private let adUnitID = "ca-app-pub-3940256099942544/2934735716"
-    #else
     private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
-    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
