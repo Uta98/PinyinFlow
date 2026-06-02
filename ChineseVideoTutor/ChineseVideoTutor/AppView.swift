@@ -56,9 +56,9 @@ struct AppView: View {
     @AppStorage("openai.apiKey") private var openAIAPIKey = ""
     @AppStorage("assemblyAI.apiKey") private var assemblyAIAPIKey = ""
     @AppStorage("whisperkit.model") private var whisperModel = "base"
-    @AppStorage("translation.engine") private var translationEngine = "deepl"
+    @AppStorage("translation.engine") private var translationEngine = "ios"
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
-    @AppStorage("transcription.engine") private var transcriptionEngine = "whisperkit"
+    @AppStorage("transcription.engine") private var transcriptionEngine = "ios"
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("subtitle.showPinyin") private var showSubtitlePinyin = true
     @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
@@ -489,10 +489,7 @@ private struct HistoryBannerAdView: View {
     private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("広告")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 0) {
             RoundedRectangle(cornerRadius: 8)
                 .fill(AppTheme.accentSoft)
                 .overlay {

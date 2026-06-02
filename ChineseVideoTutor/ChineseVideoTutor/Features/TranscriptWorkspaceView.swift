@@ -420,10 +420,7 @@ private struct WaitingAdSlotView: View {
     let style: Style
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("広告")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(style == .dark ? .white.opacity(0.62) : .secondary)
+        VStack(alignment: .leading, spacing: 0) {
             RoundedRectangle(cornerRadius: 8)
                 .fill(style == .dark ? Color.white.opacity(0.08) : AppTheme.accentSoft)
                 .overlay {

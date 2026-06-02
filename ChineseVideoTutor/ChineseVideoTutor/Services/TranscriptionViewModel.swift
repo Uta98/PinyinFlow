@@ -45,8 +45,8 @@ final class TranscriptionViewModel: ObservableObject {
         openAIAPIKey: String = "",
         assemblyAIAPIKey: String = "",
         whisperModel: String = "base",
-        translationEngine: String = "deepl",
-        transcriptionEngine: String = "whisperkit",
+        translationEngine: String = "ios",
+        transcriptionEngine: String = "ios",
         translationTarget: String = TranslationTargetLanguage.japanese.rawValue
     ) {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
