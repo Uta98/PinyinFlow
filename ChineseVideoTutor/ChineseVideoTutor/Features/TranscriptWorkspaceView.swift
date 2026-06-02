@@ -410,7 +410,7 @@ private struct ProcessingSkeletonView: View {
 }
 
 private struct WaitingAdSlotView: View {
-    private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
+    private let adUnitID = "ca-app-pub-2083362073572230/6597316054"
 
     enum Style {
         case light
@@ -420,20 +420,9 @@ private struct WaitingAdSlotView: View {
     let style: Style
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(style == .dark ? Color.white.opacity(0.08) : AppTheme.accentSoft)
-                .overlay {
-                    AdBannerView(adUnitID: adUnitID)
-                        .frame(width: 300, height: 250)
-                }
-                .frame(height: style == .dark ? 250 : 250)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(style == .dark ? Color.white.opacity(0.14) : AppTheme.accentStroke, lineWidth: 1)
-                }
-        }
-        .padding(.top, 4)
+        InterstitialAdTriggerView(adUnitID: adUnitID)
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
     }
 }
 

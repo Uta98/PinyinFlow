@@ -305,6 +305,7 @@ private struct ImportHomeView: View {
     let importText: () -> Void
     @State private var sessionPendingDeletion: TranscriptSession?
 
+    private let nativeAdUnitID = "ca-app-pub-2083362073572230/9031907705"
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     private var query: String {
@@ -345,7 +346,7 @@ private struct ImportHomeView: View {
                     .padding(.top, 40)
                 } else if query.isEmpty {
                     LazyVGrid(columns: columns, spacing: 10) {
-                        ForEach(history) { session in
+                        ForEach(Array(history.enumerated()), id: \.element.id) { index, session in
                             HistoryTile(session: session) {
                                 openSession(session, nil)
                             }
@@ -355,6 +356,10 @@ private struct ImportHomeView: View {
                                 } label: {
                                     Label("削除", systemImage: "trash")
                                 }
+                            }
+
+                            if (index + 1).isMultiple(of: 5) {
+                                NativeAdHistoryTile(adUnitID: nativeAdUnitID)
                             }
                         }
                     }
@@ -379,9 +384,6 @@ private struct ImportHomeView: View {
                         }
                     }
                 }
-
-                HistoryBannerAdView()
-                    .padding(.top, 4)
             }
             .padding()
         }
@@ -503,6 +505,16 @@ private struct HistoryBannerAdView: View {
                         .stroke(AppTheme.accentStroke, lineWidth: 1)
                 }
         }
+    }
+}
+
+private struct NativeAdHistoryTile: View {
+    let adUnitID: String
+
+    var body: some View {
+        NativeAdCardView(adUnitID: adUnitID)
+            .aspectRatio(9 / 16, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
 
