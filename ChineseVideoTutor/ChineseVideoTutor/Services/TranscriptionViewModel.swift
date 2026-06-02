@@ -46,7 +46,7 @@ final class TranscriptionViewModel: ObservableObject {
         assemblyAIAPIKey: String = "",
         whisperModel: String = "base",
         translationEngine: String = "ios",
-        transcriptionEngine: String = "ios",
+        transcriptionEngine: String = "whisperkit",
         translationTarget: String = TranslationTargetLanguage.japanese.rawValue
     ) {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -57,9 +57,7 @@ final class TranscriptionViewModel: ObservableObject {
         let trimmedAssemblyAIKey = assemblyAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let targetLanguage = TranslationTargetLanguage(rawValue: translationTarget) ?? .japanese
 
-        if transcriptionEngine == "ios" {
-            speechTranscriber = SpeechSpeechTranscriber(localeIdentifier: "zh-CN")
-        } else if transcriptionEngine == "openai", trimmedOpenAIKey.isEmpty == false {
+        if transcriptionEngine == "openai", trimmedOpenAIKey.isEmpty == false {
             speechTranscriber = OpenAIWhisperAPISpeechTranscriber(apiKey: trimmedOpenAIKey)
         } else if transcriptionEngine == "openai" {
             speechTranscriber = MissingAPIKeySpeechTranscriber(serviceName: "OpenAI")

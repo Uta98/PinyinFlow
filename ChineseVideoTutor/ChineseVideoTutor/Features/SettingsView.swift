@@ -36,7 +36,6 @@ struct SettingsView: View {
         ("azure", "Azure AI Translator")
     ]
     private let transcriptionEngines = [
-        ("ios", "iOS純正"),
         ("whisperkit", "WhisperKit"),
         ("openai", "OpenAI Whisper API"),
         ("assemblyai", "AssemblyAI")
@@ -131,7 +130,7 @@ struct SettingsView: View {
                 } header: {
                     Text("文字起こしツール")
                 } footer: {
-                    SettingsDescriptionText("WhisperKitは端末内で処理します。iOS純正はSpeechフレームワーク、OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使います。")
+                    SettingsDescriptionText("WhisperKitは無料で利用でき、端末内で文字起こしを処理します。OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使うため、各サービスのAPIキーや料金が必要になる場合があります。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -270,7 +269,7 @@ private struct PrivacyInfoView: View {
             )
             SettingsTextBlock(
                 title: "外部サービス",
-                text: "DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。"
+                text: "DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。WhisperKitは無料で利用できます。"
             )
             SettingsTextBlock(
                 title: "広告",
@@ -278,7 +277,7 @@ private struct PrivacyInfoView: View {
             )
             SettingsTextBlock(
                 title: "権限",
-                text: "iOS純正の音声認識を使う場合、音声認識の許可が必要です。写真から動画を選ぶ場合は写真ライブラリの選択UIを使用します。"
+                text: "写真から動画を選ぶ場合は写真ライブラリの選択UIを使用します。ファイルを取り込む場合は、ユーザーが選択したファイルのみ読み込みます。"
             )
         }
         .navigationTitle("プライバシー")

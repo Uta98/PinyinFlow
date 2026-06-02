@@ -13,24 +13,41 @@ enum AdMobRuntime {
     }
 }
 
+enum AdMobAdUnits {
+    #if DEBUG
+    static let banner = "ca-app-pub-3940256099942544/2934735716"
+    static let interstitial = "ca-app-pub-3940256099942544/4411468910"
+    static let native = "ca-app-pub-3940256099942544/3986624511"
+    #else
+    static let banner = "ca-app-pub-2083362073572230/5681513186"
+    static let interstitial = "ca-app-pub-2083362073572230/6597316054"
+    static let native = "ca-app-pub-2083362073572230/9031907705"
+    #endif
+}
+
 struct InterstitialAdTriggerView: UIViewControllerRepresentable {
     let adUnitID: String
+    let triggerID: UUID
 
     func makeUIViewController(context: Context) -> InterstitialAdViewController {
         let viewController = InterstitialAdViewController()
         viewController.adUnitID = adUnitID
+        viewController.triggerID = triggerID
         return viewController
     }
 
     func updateUIViewController(_ viewController: InterstitialAdViewController, context: Context) {
         viewController.adUnitID = adUnitID
+        viewController.updateTrigger(triggerID)
         viewController.loadAndPresentIfNeeded()
     }
 }
 
 final class InterstitialAdViewController: UIViewController, FullScreenContentDelegate {
     var adUnitID: String = ""
+    var triggerID = UUID()
     private var interstitialAd: InterstitialAd?
+    private var lastRequestedTriggerID: UUID?
     private var didRequestAd = false
 
     override func viewDidAppear(_ animated: Bool) {
@@ -38,9 +55,21 @@ final class InterstitialAdViewController: UIViewController, FullScreenContentDel
         loadAndPresentIfNeeded()
     }
 
+    func updateTrigger(_ id: UUID) {
+        guard triggerID != id else { return }
+        triggerID = id
+        didRequestAd = false
+    }
+
     func loadAndPresentIfNeeded() {
-        guard didRequestAd == false, adUnitID.isEmpty == false, isViewLoaded else { return }
+        guard
+            didRequestAd == false,
+            lastRequestedTriggerID != triggerID,
+            adUnitID.isEmpty == false,
+            isViewLoaded
+        else { return }
         didRequestAd = true
+        lastRequestedTriggerID = triggerID
         AdMobRuntime.startIfNeeded()
         InterstitialAd.load(with: adUnitID, request: Request()) { [weak self] ad, error in
             guard let self else { return }
@@ -50,8 +79,14 @@ final class InterstitialAdViewController: UIViewController, FullScreenContentDel
             }
             interstitialAd = ad
             interstitialAd?.fullScreenContentDelegate = self
-            interstitialAd?.present(from: self)
+            presentLoadedAd()
         }
+    }
+
+    private func presentLoadedAd() {
+        guard let interstitialAd else { return }
+        let presenter = UIApplication.shared.topMostViewController ?? self
+        interstitialAd.present(from: presenter)
     }
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
@@ -61,6 +96,32 @@ final class InterstitialAdViewController: UIViewController, FullScreenContentDel
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
         print("AdMob: failed to present interstitial ad: \(error.localizedDescription)")
         interstitialAd = nil
+    }
+}
+
+private extension UIApplication {
+    var topMostViewController: UIViewController? {
+        connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .rootViewController?
+            .topMostPresentedViewController
+    }
+}
+
+private extension UIViewController {
+    var topMostPresentedViewController: UIViewController {
+        if let presentedViewController {
+            return presentedViewController.topMostPresentedViewController
+        }
+        if let navigationController = self as? UINavigationController {
+            return navigationController.visibleViewController?.topMostPresentedViewController ?? navigationController
+        }
+        if let tabBarController = self as? UITabBarController {
+            return tabBarController.selectedViewController?.topMostPresentedViewController ?? tabBarController
+        }
+        return self
     }
 }
 

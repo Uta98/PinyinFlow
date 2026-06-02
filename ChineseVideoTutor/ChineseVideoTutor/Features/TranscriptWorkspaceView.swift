@@ -13,6 +13,7 @@ struct TranscriptWorkspaceView: View {
     @State private var currentTime: TimeInterval = 0
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
+    @State private var processingAdTriggerID = UUID()
 
     private var playerRate: Float {
         Float(playbackRate)
@@ -95,10 +96,8 @@ struct TranscriptWorkspaceView: View {
         .tint(AppTheme.accent)
         .overlay(alignment: .bottom) {
             if viewModel.phase.isBusy {
-                WaitingAdSlotView(style: .light)
-                    .frame(maxWidth: 340)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 18)
+                WaitingAdSlotView(triggerID: processingAdTriggerID)
+                    .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
             }
         }
@@ -110,6 +109,9 @@ struct TranscriptWorkspaceView: View {
             configurePlayer(for: url)
         }
         .onChange(of: viewModel.phase) { _, _ in
+            if viewModel.phase.isBusy {
+                processingAdTriggerID = UUID()
+            }
             configurePlayer(for: viewModel.selectedVideoURL)
         }
         .onChange(of: playbackRate) { _, newValue in
@@ -410,18 +412,17 @@ private struct ProcessingSkeletonView: View {
 }
 
 private struct WaitingAdSlotView: View {
-    private let adUnitID = "ca-app-pub-2083362073572230/6597316054"
+    private let adUnitID = AdMobAdUnits.interstitial
+    let triggerID: UUID
 
     enum Style {
         case light
         case dark
     }
 
-    let style: Style
-
     var body: some View {
-        InterstitialAdTriggerView(adUnitID: adUnitID)
-            .frame(width: 0, height: 0)
+        InterstitialAdTriggerView(adUnitID: adUnitID, triggerID: triggerID)
+            .frame(width: 1, height: 1)
             .accessibilityHidden(true)
     }
 }

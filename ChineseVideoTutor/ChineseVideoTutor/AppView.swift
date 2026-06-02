@@ -58,7 +58,7 @@ struct AppView: View {
     @AppStorage("whisperkit.model") private var whisperModel = "base"
     @AppStorage("translation.engine") private var translationEngine = "ios"
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
-    @AppStorage("transcription.engine") private var transcriptionEngine = "ios"
+    @AppStorage("transcription.engine") private var transcriptionEngine = "whisperkit"
     @AppStorage("transcript.textScale") private var textScale = 1.0
     @AppStorage("subtitle.showPinyin") private var showSubtitlePinyin = true
     @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
@@ -191,6 +191,9 @@ struct AppView: View {
             }
         }
         .onAppear {
+            if transcriptionEngine == "ios" {
+                transcriptionEngine = "whisperkit"
+            }
             configurePlaybackAudioSession()
             configureViewModelServices()
         }
@@ -305,7 +308,7 @@ private struct ImportHomeView: View {
     let importText: () -> Void
     @State private var sessionPendingDeletion: TranscriptSession?
 
-    private let nativeAdUnitID = "ca-app-pub-2083362073572230/9031907705"
+    private let nativeAdUnitID = AdMobAdUnits.native
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     private var query: String {
@@ -488,7 +491,7 @@ private struct SearchField: View {
 }
 
 private struct HistoryBannerAdView: View {
-    private let adUnitID = "ca-app-pub-2083362073572230/5681513186"
+    private let adUnitID = AdMobAdUnits.banner
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
