@@ -361,7 +361,7 @@ private struct ImportHomeView: View {
                                 }
                             }
 
-                            if (index + 1).isMultiple(of: 5) {
+                            if AdMobRuntime.adsDisabled == false, (index + 1).isMultiple(of: 5) {
                                 NativeAdHistoryTile(adUnitID: nativeAdUnitID)
                             }
                         }

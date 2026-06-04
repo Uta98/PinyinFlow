@@ -6,7 +6,13 @@ import UIKit
 enum AdMobRuntime {
     private static var didStart = false
 
+    static var adsDisabled: Bool {
+        ProcessInfo.processInfo.arguments.contains("-PinyinFlowDisableAds")
+            || ProcessInfo.processInfo.environment["PINYINFLOW_DISABLE_ADS"] == "1"
+    }
+
     static func startIfNeeded() {
+        guard adsDisabled == false else { return }
         guard didStart == false else { return }
         didStart = true
         MobileAds.shared.start()
@@ -49,6 +55,7 @@ final class InterstitialAdPresenter: NSObject, ObservableObject, FullScreenConte
     private var isLoading = false
 
     func present(adUnitID: String) {
+        guard AdMobRuntime.adsDisabled == false else { return }
         guard isLoading == false, interstitialAd == nil, adUnitID.isEmpty == false else { return }
         isLoading = true
         AdMobRuntime.startIfNeeded()
@@ -96,6 +103,7 @@ final class InterstitialAdViewController: UIViewController, FullScreenContentDel
 
     func loadAndPresentIfNeeded() {
         guard
+            AdMobRuntime.adsDisabled == false,
             didRequestAd == false,
             lastRequestedTriggerID != triggerID,
             adUnitID.isEmpty == false,
@@ -205,7 +213,7 @@ final class BannerViewController: UIViewController {
     }
 
     func loadAdIfNeeded() {
-        guard didLoadAd == false, adUnitID.isEmpty == false, isViewLoaded else { return }
+        guard AdMobRuntime.adsDisabled == false, didLoadAd == false, adUnitID.isEmpty == false, isViewLoaded else { return }
         didLoadAd = true
         AdMobRuntime.startIfNeeded()
         bannerView.adUnitID = adUnitID
@@ -265,7 +273,7 @@ struct NativeAdCardView: UIViewRepresentable {
 
         @MainActor
         func load(adUnitID: String, rootViewController: UIViewController?) {
-            guard loadedAdUnitID != adUnitID, adUnitID.isEmpty == false else { return }
+            guard AdMobRuntime.adsDisabled == false, loadedAdUnitID != adUnitID, adUnitID.isEmpty == false else { return }
             loadedAdUnitID = adUnitID
             AdMobRuntime.startIfNeeded()
             adLoader = AdLoader(
@@ -289,7 +297,7 @@ struct NativeAdCardView: UIViewRepresentable {
 }
 
 final class PinyinFlowNativeAdView: NativeAdView {
-    private let media = MediaView()
+    private let iconImageView = UIImageView()
     private let headlineLabel = UILabel()
     private let bodyLabel = UILabel()
     private let callToActionLabel = UILabel()
@@ -312,7 +320,8 @@ final class PinyinFlowNativeAdView: NativeAdView {
         bodyLabel.text = ad.body
         advertiserLabel.text = ad.advertiser
         callToActionLabel.text = ad.callToAction
-        media.mediaContent = ad.mediaContent
+        iconImageView.image = ad.icon?.image
+        iconImageView.isHidden = ad.icon == nil
         bodyLabel.isHidden = ad.body == nil
         advertiserLabel.isHidden = ad.advertiser == nil
         callToActionLabel.isHidden = ad.callToAction == nil
@@ -336,9 +345,11 @@ final class PinyinFlowNativeAdView: NativeAdView {
         content.clipsToBounds = true
         addSubview(content)
 
-        media.translatesAutoresizingMaskIntoConstraints = false
-        media.contentMode = .scaleAspectFill
-        content.addSubview(media)
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFill
+        iconImageView.layer.cornerRadius = 8
+        iconImageView.clipsToBounds = true
+        content.addSubview(iconImageView)
 
         adBadgeLabel.text = "Ad"
         adBadgeLabel.font = .systemFont(ofSize: 10, weight: .bold)
@@ -382,7 +393,7 @@ final class PinyinFlowNativeAdView: NativeAdView {
         stack.addArrangedSubview(advertiserLabel)
         stack.addArrangedSubview(callToActionLabel)
 
-        mediaView = media
+        iconView = iconImageView
         headlineView = headlineLabel
         bodyView = bodyLabel
         advertiserView = advertiserLabel
@@ -394,19 +405,19 @@ final class PinyinFlowNativeAdView: NativeAdView {
             content.topAnchor.constraint(equalTo: topAnchor),
             content.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-            media.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            media.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            media.topAnchor.constraint(equalTo: content.topAnchor),
-            media.heightAnchor.constraint(equalTo: content.heightAnchor, multiplier: 0.46),
-
             adBadgeLabel.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 8),
             adBadgeLabel.topAnchor.constraint(equalTo: content.topAnchor, constant: 8),
             adBadgeLabel.widthAnchor.constraint(equalToConstant: 28),
             adBadgeLabel.heightAnchor.constraint(equalToConstant: 18),
 
+            iconImageView.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
+            iconImageView.topAnchor.constraint(equalTo: adBadgeLabel.bottomAnchor, constant: 10),
+            iconImageView.widthAnchor.constraint(equalToConstant: 34),
+            iconImageView.heightAnchor.constraint(equalToConstant: 34),
+
             stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
-            stack.topAnchor.constraint(equalTo: media.bottomAnchor, constant: 10),
+            stack.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 10),
             stack.bottomAnchor.constraint(lessThanOrEqualTo: content.bottomAnchor, constant: -10),
             callToActionLabel.heightAnchor.constraint(equalToConstant: 30)
         ])
