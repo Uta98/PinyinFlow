@@ -43,6 +43,39 @@ struct InterstitialAdTriggerView: UIViewControllerRepresentable {
     }
 }
 
+@MainActor
+final class InterstitialAdPresenter: NSObject, ObservableObject, FullScreenContentDelegate {
+    private var interstitialAd: InterstitialAd?
+    private var isLoading = false
+
+    func present(adUnitID: String) {
+        guard isLoading == false, interstitialAd == nil, adUnitID.isEmpty == false else { return }
+        isLoading = true
+        AdMobRuntime.startIfNeeded()
+        InterstitialAd.load(with: adUnitID, request: Request()) { [weak self] ad, error in
+            guard let self else { return }
+            isLoading = false
+            if let error {
+                print("AdMob: failed to load interstitial ad: \(error.localizedDescription)")
+                return
+            }
+            interstitialAd = ad
+            interstitialAd?.fullScreenContentDelegate = self
+            let presenter = UIApplication.shared.topMostViewController
+            interstitialAd?.present(from: presenter)
+        }
+    }
+
+    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        interstitialAd = nil
+    }
+
+    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        print("AdMob: failed to present interstitial ad: \(error.localizedDescription)")
+        interstitialAd = nil
+    }
+}
+
 final class InterstitialAdViewController: UIViewController, FullScreenContentDelegate {
     var adUnitID: String = ""
     var triggerID = UUID()

@@ -13,8 +13,8 @@ struct TranscriptWorkspaceView: View {
     @State private var currentTime: TimeInterval = 0
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
-    @State private var processingAdTriggerID = UUID()
-    @State private var shouldShowProcessingInterstitial = true
+    @State private var hasRequestedProcessingInterstitial = false
+    @StateObject private var interstitialPresenter = InterstitialAdPresenter()
 
     private var playerRate: Float {
         Float(playbackRate)
@@ -95,27 +95,17 @@ struct TranscriptWorkspaceView: View {
         }
         .background(Color(.systemGroupedBackground))
         .tint(AppTheme.accent)
-        .overlay(alignment: .bottom) {
-            if viewModel.phase.isBusy, shouldShowProcessingInterstitial {
-                WaitingAdSlotView(triggerID: processingAdTriggerID) {
-                    shouldShowProcessingInterstitial = false
-                }
-                    .frame(width: 1, height: 1)
-                    .allowsHitTesting(false)
-            }
-        }
         .onAppear {
             pendingInitialSeek = viewModel.initialPlaybackTime
             configurePlayer(for: viewModel.selectedVideoURL)
+            presentProcessingInterstitialIfNeeded()
         }
         .onChange(of: viewModel.selectedVideoURL) { _, url in
             configurePlayer(for: url)
         }
         .onChange(of: viewModel.phase) { _, _ in
-            if viewModel.phase.isBusy, shouldShowProcessingInterstitial {
-                processingAdTriggerID = UUID()
-            }
             configurePlayer(for: viewModel.selectedVideoURL)
+            presentProcessingInterstitialIfNeeded()
         }
         .onChange(of: playbackRate) { _, newValue in
             player?.defaultRate = Float(newValue)
@@ -176,6 +166,12 @@ struct TranscriptWorkspaceView: View {
             player?.removeTimeObserver(timeObserver)
             self.timeObserver = nil
         }
+    }
+
+    private func presentProcessingInterstitialIfNeeded() {
+        guard viewModel.phase.isBusy, hasRequestedProcessingInterstitial == false else { return }
+        hasRequestedProcessingInterstitial = true
+        interstitialPresenter.present(adUnitID: AdMobAdUnits.interstitial)
     }
 }
 
@@ -411,28 +407,6 @@ private struct ProcessingSkeletonView: View {
                 pulse = true
             }
         }
-    }
-}
-
-private struct WaitingAdSlotView: View {
-    private let adUnitID = AdMobAdUnits.interstitial
-    let triggerID: UUID
-    let markAttached: () -> Void
-
-    enum Style {
-        case light
-        case dark
-    }
-
-    var body: some View {
-        InterstitialAdTriggerView(adUnitID: adUnitID, triggerID: triggerID)
-            .frame(width: 1, height: 1)
-            .accessibilityHidden(true)
-            .onAppear {
-                DispatchQueue.main.async {
-                    markAttached()
-                }
-            }
     }
 }
 
