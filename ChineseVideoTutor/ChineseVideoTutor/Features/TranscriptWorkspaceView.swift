@@ -169,7 +169,11 @@ struct TranscriptWorkspaceView: View {
     }
 
     private func presentProcessingInterstitialIfNeeded() {
-        guard viewModel.phase.isBusy, hasRequestedProcessingInterstitial == false else { return }
+        guard
+            viewModel.phase.isBusy,
+            viewModel.isTextOnlySession == false,
+            hasRequestedProcessingInterstitial == false
+        else { return }
         hasRequestedProcessingInterstitial = true
         interstitialPresenter.present(adUnitID: AdMobAdUnits.interstitial)
     }
