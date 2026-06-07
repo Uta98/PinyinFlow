@@ -50,6 +50,39 @@ struct SettingsView: View {
         )
     }
 
+    private var translationCredentialWarning: String? {
+        switch translationEngine {
+        case "deepl" where apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
+            return "DeepLを使うにはAPIキーの設定が必要です。"
+        case "google" where googleTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
+            return "Google Cloud Translationを使うにはAPIキーの設定が必要です。"
+        case "azure":
+            let isKeyMissing = azureTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let isRegionMissing = azureTranslateRegion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if isKeyMissing && isRegionMissing {
+                return "Azure AI Translatorを使うにはAPIキーとリージョンの設定が必要です。"
+            } else if isKeyMissing {
+                return "Azure AI Translatorを使うにはAPIキーの設定が必要です。"
+            } else if isRegionMissing {
+                return "Azure AI Translatorを使うにはリージョンの設定が必要です。"
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private var transcriptionCredentialWarning: String? {
+        switch transcriptionEngine {
+        case "openai" where openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
+            return "OpenAI Whisper APIを使うにはAPIキーの設定が必要です。"
+        case "assemblyai" where assemblyAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
+            return "AssemblyAIを使うにはAPIキーの設定が必要です。"
+        default:
+            return nil
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -90,6 +123,10 @@ struct SettingsView: View {
                             )
                         }
                     }
+
+                    if let translationCredentialWarning {
+                        SettingsWarningText(translationCredentialWarning)
+                    }
                 } header: {
                     Text("翻訳ツール")
                 } footer: {
@@ -127,10 +164,14 @@ struct SettingsView: View {
                             )
                         }
                     }
+
+                    if let transcriptionCredentialWarning {
+                        SettingsWarningText(transcriptionCredentialWarning)
+                    }
                 } header: {
                     Text("文字起こしツール")
                 } footer: {
-                    SettingsDescriptionText("WhisperKitは無料で利用でき、端末内で文字起こしを処理します。OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使うため、各サービスのAPIキーや料金が必要になる場合があります。")
+                    SettingsDescriptionText("WhisperKitは無料で利用でき、音声データを外部APIへ送らず端末内で文字起こしを処理するため、プライバシーとセキュリティ面でも安心して使えます。OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使うため、各サービスのAPIキーや料金が必要になる場合があります。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -156,6 +197,9 @@ struct SettingsView: View {
                     }
                     NavigationLink("お問い合わせ") {
                         ContactInfoView()
+                    }
+                    NavigationLink("ライセンス") {
+                        ThirdPartyLicensesView()
                     }
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
@@ -200,6 +244,21 @@ private struct SettingsDescriptionText: View {
             .font(.footnote)
             .foregroundStyle(.secondary)
             .padding(.top, 2)
+    }
+}
+
+private struct SettingsWarningText: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Label(text, systemImage: "exclamationmark.triangle.fill")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(AppTheme.settingsAccent)
+            .padding(.vertical, 2)
     }
 }
 
@@ -350,6 +409,48 @@ private struct TermsOfUseView: View {
         }
         .navigationTitle("利用規約")
     }
+}
+
+private struct ThirdPartyLicensesView: View {
+    var body: some View {
+        SettingsTextPage {
+            SettingsTextBlock(
+                title: "WhisperKit / argmax-oss-swift",
+                text: "PinyinFlowは、文字起こし機能の一部にWhisperKitを利用しています。WhisperKitはMIT Licenseで提供されており、以下に著作権表示およびライセンス全文を記載します。"
+            )
+
+            Text(Self.whisperKitLicenseText)
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+                .lineSpacing(3)
+        }
+        .navigationTitle("ライセンス")
+    }
+
+    private static let whisperKitLicenseText = """
+    MIT License
+
+    Copyright (c) 2024 argmax, inc.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+    """
 }
 
 private struct ContactInfoView: View {
