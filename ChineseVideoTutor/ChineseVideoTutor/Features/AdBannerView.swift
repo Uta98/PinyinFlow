@@ -5,10 +5,24 @@ import UIKit
 @MainActor
 enum AdMobRuntime {
     private static var didStart = false
+    private static let disableAdsDefaultsKey = "debug.disableAdsForScreenshots"
 
     static var adsDisabled: Bool {
-        ProcessInfo.processInfo.arguments.contains("-PinyinFlowDisableAds")
-            || ProcessInfo.processInfo.environment["PINYINFLOW_DISABLE_ADS"] == "1"
+        let processInfo = ProcessInfo.processInfo
+        if processInfo.arguments.contains("-PinyinFlowEnableAds")
+            || processInfo.environment["PINYINFLOW_DISABLE_ADS"] == "0" {
+            UserDefaults.standard.set(false, forKey: disableAdsDefaultsKey)
+            return false
+        }
+
+        if processInfo.arguments.contains("-PinyinFlowDisableAds")
+            || processInfo.environment["PINYINFLOW_DISABLE_ADS"] == "1"
+            || processInfo.environment["PinyinFlowDisableAds"] == "1" {
+            UserDefaults.standard.set(true, forKey: disableAdsDefaultsKey)
+            return true
+        }
+
+        return UserDefaults.standard.bool(forKey: disableAdsDefaultsKey)
     }
 
     static func startIfNeeded() {

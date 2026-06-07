@@ -288,20 +288,44 @@ private struct PrivacyPolicyView: View {
     var body: some View {
         SettingsTextPage {
             SettingsTextBlock(
-                title: "収集・保存する情報",
-                text: "PinyinFlowは、ユーザーが取り込んだ動画・音声・テキスト、文字起こし結果、拼音、翻訳、お気に入り情報を端末内に保存します。"
+                title: "概要",
+                text: "PinyinFlowは、中国語の動画、音声、テキストに文字起こし、拼音、翻訳を付与し、学習を補助するアプリです。本ポリシーでは、本アプリにおける情報の取り扱いについて説明します。"
             )
             SettingsTextBlock(
-                title: "外部送信",
-                text: "設定でクラウド翻訳またはクラウド文字起こしを選択した場合、処理に必要なテキストまたは音声データを選択中の外部サービスへ送信します。APIキーは端末内に保存されます。"
+                title: "1. アプリ内に保存される情報",
+                text: "本アプリは、ユーザーが取り込んだ動画・音声ファイル、入力した中国語テキスト、文字起こし結果、拼音、翻訳、お気に入り状態、履歴情報、アプリ設定を端末内に保存します。これらの情報は、履歴表示、再生、字幕表示、お気に入り表示、設定の維持のために使用されます。"
             )
             SettingsTextBlock(
-                title: "広告",
-                text: "本アプリはGoogle Mobile Ads SDKを利用して広告を表示する場合があります。広告表示に伴うデータの扱いは、Googleのポリシーとユーザーの同意設定に従います。"
+                title: "2. 外部サービスへの送信",
+                text: "本アプリでは、設定により翻訳ツールや文字起こしツールを選択できます。WhisperKitを利用する場合、文字起こしは端末内で処理されます。iOS純正翻訳などのシステム機能を利用する場合、処理は選択した機能の範囲で端末側またはAppleのシステム機能により行われます。DeepL、Google Cloud Translation、Azure AI Translatorなどのクラウド翻訳を選択した場合、翻訳に必要な中国語テキストが選択中の外部サービスへ送信されます。OpenAI Whisper API、AssemblyAIなどのクラウド文字起こしを選択した場合、文字起こしに必要な音声データが選択中の外部サービスへ送信されます。外部サービスを利用する場合、各サービスの利用規約およびプライバシーポリシーが適用されます。"
             )
             SettingsTextBlock(
-                title: "削除",
+                title: "3. APIキーの取り扱い",
+                text: "ユーザーが入力した外部サービスのAPIキーは、端末内に保存され、選択した翻訳または文字起こし機能を実行するために使用されます。本アプリは、APIキーを開発者のサーバーへ送信しません。"
+            )
+            SettingsTextBlock(
+                title: "4. 広告",
+                text: "本アプリは、Google Mobile Ads SDKを利用して広告を表示する場合があります。広告配信に伴い、Googleまたは広告配信パートナーが広告識別子、端末情報、広告表示や操作に関する情報などを取り扱う場合があります。広告に関する情報の取り扱いは、Googleのポリシーおよびユーザーの同意設定に従います。"
+            )
+            SettingsTextBlock(
+                title: "5. アクセス権限",
+                text: "本アプリは、ユーザーが選択した機能を提供するために、ファイル、写真ライブラリ、音声認識などへのアクセス許可を求める場合があります。これらの権限は、ユーザーが該当機能を利用する時にのみ使用されます。"
+            )
+            SettingsTextBlock(
+                title: "6. データの削除",
                 text: "履歴の長押し削除により、保存済みの動画・音声・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。"
+            )
+            SettingsTextBlock(
+                title: "7. 免責",
+                text: "文字起こし、拼音、翻訳の結果は、利用するツールや入力内容により誤りが含まれる場合があります。本アプリは、学習補助を目的としたものであり、翻訳結果や文字起こし結果の完全性、正確性を保証するものではありません。"
+            )
+            SettingsTextBlock(
+                title: "8. ポリシーの変更",
+                text: "本ポリシーは、必要に応じて変更される場合があります。重要な変更がある場合は、本ページまたはアプリ内でお知らせします。"
+            )
+            SettingsTextBlock(
+                title: "9. お問い合わせ",
+                text: "本ポリシーに関するお問い合わせは、アプリ内のお問い合わせ機能からご連絡ください。"
             )
         }
         .navigationTitle("プライバシーポリシー")
@@ -329,18 +353,20 @@ private struct TermsOfUseView: View {
 }
 
 private struct ContactInfoView: View {
+    private let formURL = URL(string: "https://forms.gle/c68wDA8eACeB888u7")!
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Button {
-                    UIApplication.shared.open(mailURL)
+                    UIApplication.shared.open(formURL)
                 } label: {
-                    Label("メールで問い合わせる", systemImage: "envelope")
+                    Label("フォームで問い合わせる", systemImage: "square.and.pencil")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(AppTheme.settingsAccent)
 
-                Text("メールアプリを開きます。端末、iOSバージョン、アプリバージョン、発生している内容を添えて送信してください。")
+                Text("Google Formsを開きます。端末、iOSバージョン、アプリバージョン、発生している内容を添えて送信してください。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -349,23 +375,6 @@ private struct ContactInfoView: View {
         }
         .background(AppTheme.appBackground)
         .navigationTitle("お問い合わせ")
-    }
-
-    private var mailURL: URL {
-        var components = URLComponents()
-        components.scheme = "mailto"
-        components.queryItems = [
-            URLQueryItem(name: "subject", value: "PinyinFlow お問い合わせ"),
-            URLQueryItem(name: "body", value: """
-            PinyinFlow お問い合わせ
-
-            端末:
-            iOS:
-            アプリバージョン:
-            内容:
-            """)
-        ]
-        return components.url!
     }
 }
 
