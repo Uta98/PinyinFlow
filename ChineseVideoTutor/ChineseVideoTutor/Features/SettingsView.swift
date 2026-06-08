@@ -25,20 +25,16 @@ struct SettingsView: View {
     ]
 
     private let textSizes: [(label: String, value: Double)] = [
-        ("小", 0.92),
+        ("小", 0.78),
         ("中", 1.0),
         ("大", 1.2)
     ]
     private let translationEngines = [
         ("ios", "iOS純正"),
-        ("deepl", "DeepL"),
-        ("google", "Google Cloud Translation"),
-        ("azure", "Azure AI Translator")
+        ("deepl", "DeepL")
     ]
     private let transcriptionEngines = [
-        ("whisperkit", "WhisperKit"),
-        ("openai", "OpenAI Whisper API"),
-        ("assemblyai", "AssemblyAI")
+        ("whisperkit", "WhisperKit")
     ]
 
     private var textSizeSelection: Binding<Double> {
@@ -54,33 +50,13 @@ struct SettingsView: View {
         switch translationEngine {
         case "deepl" where apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
             return "DeepLを使うにはAPIキーの設定が必要です。"
-        case "google" where googleTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
-            return "Google Cloud Translationを使うにはAPIキーの設定が必要です。"
-        case "azure":
-            let isKeyMissing = azureTranslateAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            let isRegionMissing = azureTranslateRegion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            if isKeyMissing && isRegionMissing {
-                return "Azure AI Translatorを使うにはAPIキーとリージョンの設定が必要です。"
-            } else if isKeyMissing {
-                return "Azure AI Translatorを使うにはAPIキーの設定が必要です。"
-            } else if isRegionMissing {
-                return "Azure AI Translatorを使うにはリージョンの設定が必要です。"
-            }
-            return nil
         default:
             return nil
         }
     }
 
     private var transcriptionCredentialWarning: String? {
-        switch transcriptionEngine {
-        case "openai" where openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
-            return "OpenAI Whisper APIを使うにはAPIキーの設定が必要です。"
-        case "assemblyai" where assemblyAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
-            return "AssemblyAIを使うにはAPIキーの設定が必要です。"
-        default:
-            return nil
-        }
+        nil
     }
 
     var body: some View {
@@ -107,21 +83,6 @@ struct SettingsView: View {
                                 note: "DeepLを使う場合のみ設定します。iOS純正翻訳を使う場合、このキーは不要です。"
                             )
                         }
-                    } else if translationEngine == "google" {
-                        NavigationLink("Google Cloud APIキー") {
-                            APIKeySettingsView(
-                                title: "Google Cloud APIキー",
-                                apiKey: $googleTranslateAPIKey,
-                                note: "Cloud Translation API を有効化したGoogle CloudプロジェクトのAPIキーを設定します。"
-                            )
-                        }
-                    } else if translationEngine == "azure" {
-                        NavigationLink("Azure Translator API") {
-                            AzureTranslatorSettingsView(
-                                apiKey: $azureTranslateAPIKey,
-                                region: $azureTranslateRegion
-                            )
-                        }
                     }
 
                     if let translationCredentialWarning {
@@ -130,7 +91,7 @@ struct SettingsView: View {
                 } header: {
                     Text("翻訳ツール")
                 } footer: {
-                    SettingsDescriptionText("iOS純正は端末の対応状況に依存します。DeepL、Google Cloud、Azureは各サービスへ中国語テキストを送信して翻訳します。")
+                    SettingsDescriptionText("iOS純正は端末の対応状況に応じて翻訳します。DeepLを選ぶ場合は、中国語テキストをDeepL APIへ送信して翻訳します。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -147,22 +108,6 @@ struct SettingsView: View {
                                 Text(model).tag(model)
                             }
                         }
-                    } else if transcriptionEngine == "openai" {
-                        NavigationLink("OpenAI APIキー") {
-                            APIKeySettingsView(
-                                title: "OpenAI APIキー",
-                                apiKey: $openAIAPIKey,
-                                note: "OpenAI Whisper APIを使う場合のみ設定します。音声データをOpenAI APIへ送信して文字起こしします。"
-                            )
-                        }
-                    } else if transcriptionEngine == "assemblyai" {
-                        NavigationLink("AssemblyAI APIキー") {
-                            APIKeySettingsView(
-                                title: "AssemblyAI APIキー",
-                                apiKey: $assemblyAIAPIKey,
-                                note: "AssemblyAIを使う場合のみ設定します。音声データをAssemblyAIへ送信して文字起こしします。"
-                            )
-                        }
                     }
 
                     if let transcriptionCredentialWarning {
@@ -171,7 +116,7 @@ struct SettingsView: View {
                 } header: {
                     Text("文字起こしツール")
                 } footer: {
-                    SettingsDescriptionText("WhisperKitは無料で利用でき、音声データを外部APIへ送らず端末内で文字起こしを処理するため、プライバシーとセキュリティ面でも安心して使えます。OpenAI Whisper APIとAssemblyAIはクラウド文字起こしを使うため、各サービスのAPIキーや料金が必要になる場合があります。")
+                    SettingsDescriptionText("現在はWhisperKitのみ利用できます。無料で利用でき、音声データを外部APIへ送らず端末内で文字起こしを処理するため、プライバシーとセキュリティ面でも安心して使えます。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -182,6 +127,7 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    SettingsDescriptionText("字幕とお気に入りに表示される中国語・拼音・翻訳の文字サイズに反映されます。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -289,36 +235,6 @@ private struct APIKeySettingsView: View {
     }
 }
 
-private struct AzureTranslatorSettingsView: View {
-    @Binding var apiKey: String
-    @Binding var region: String
-
-    var body: some View {
-        Form {
-            Section("Azure Translator API") {
-                SecureField("Subscription Key", text: $apiKey)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-
-                TextField("Region 例: japaneast", text: $region)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            }
-            .listRowBackground(AppTheme.settingsRowBackground)
-
-            Section {
-                Text("Azure AI Translator リソースのキーとリージョンを設定します。")
-                    .foregroundStyle(.secondary)
-            }
-            .listRowBackground(AppTheme.settingsRowBackground)
-        }
-        .navigationTitle("Azure Translator API")
-        .scrollContentBackground(.hidden)
-        .background(AppTheme.appBackground)
-        .tint(AppTheme.settingsAccent)
-    }
-}
-
 private struct PrivacyInfoView: View {
     var body: some View {
         SettingsTextPage {
@@ -328,7 +244,7 @@ private struct PrivacyInfoView: View {
             )
             SettingsTextBlock(
                 title: "外部サービス",
-                text: "DeepL、Google Cloud Translation、Azure AI Translatorを選択した場合、中国語テキストを各APIへ送信して翻訳を作成します。OpenAI Whisper API、AssemblyAIを選択した場合、音声データを各APIへ送信して文字起こしします。iOS純正翻訳やWhisperKitは選択した機能の範囲で端末側の処理を使います。WhisperKitは無料で利用できます。"
+                text: "DeepLを選択した場合、中国語テキストをDeepL APIへ送信して翻訳を作成します。iOS純正翻訳は端末の対応状況に応じてAppleのシステム機能を利用します。WhisperKitは音声データを外部APIへ送らず端末内で文字起こしします。"
             )
             SettingsTextBlock(
                 title: "広告",
@@ -356,7 +272,7 @@ private struct PrivacyPolicyView: View {
             )
             SettingsTextBlock(
                 title: "2. 外部サービスへの送信",
-                text: "本アプリでは、設定により翻訳ツールや文字起こしツールを選択できます。WhisperKitを利用する場合、文字起こしは端末内で処理されます。iOS純正翻訳などのシステム機能を利用する場合、処理は選択した機能の範囲で端末側またはAppleのシステム機能により行われます。DeepL、Google Cloud Translation、Azure AI Translatorなどのクラウド翻訳を選択した場合、翻訳に必要な中国語テキストが選択中の外部サービスへ送信されます。OpenAI Whisper API、AssemblyAIなどのクラウド文字起こしを選択した場合、文字起こしに必要な音声データが選択中の外部サービスへ送信されます。外部サービスを利用する場合、各サービスの利用規約およびプライバシーポリシーが適用されます。"
+                text: "本アプリでは、設定により翻訳ツールや文字起こしツールを選択できます。WhisperKitを利用する場合、文字起こしは端末内で処理され、音声データを外部APIへ送信しません。iOS純正翻訳を利用する場合、処理は端末の対応状況に応じてAppleのシステム機能により行われます。DeepLを選択した場合、翻訳に必要な中国語テキストがDeepL APIへ送信されます。外部サービスを利用する場合、各サービスの利用規約およびプライバシーポリシーが適用されます。"
             )
             SettingsTextBlock(
                 title: "3. APIキーの取り扱い",
@@ -404,7 +320,7 @@ private struct TermsOfUseView: View {
             )
             SettingsTextBlock(
                 title: "外部サービス",
-                text: "外部APIを利用する場合、各サービスの利用規約、料金、制限が適用されます。APIキーの管理はユーザー自身の責任で行ってください。"
+                text: "DeepLなど外部APIを利用する場合、各サービスの利用規約、料金、制限が適用されます。APIキーの管理はユーザー自身の責任で行ってください。"
             )
         }
         .navigationTitle("利用規約")
@@ -490,7 +406,7 @@ private struct SettingsTextPage<Content: View>: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(AppTheme.appBackground)
+        .background(Color(.systemBackground))
     }
 }
 

@@ -191,9 +191,7 @@ struct AppView: View {
             }
         }
         .onAppear {
-            if transcriptionEngine == "ios" {
-                transcriptionEngine = "whisperkit"
-            }
+            normalizeToolSelections()
             configurePlaybackAudioSession()
             configureViewModelServices()
         }
@@ -238,6 +236,15 @@ struct AppView: View {
         }
     }
 
+    private func normalizeToolSelections() {
+        if translationEngine != "ios", translationEngine != "deepl" {
+            translationEngine = "ios"
+        }
+        if transcriptionEngine != "whisperkit" {
+            transcriptionEngine = "whisperkit"
+        }
+    }
+
     private func configureViewModelServices(
         apiKey: String? = nil,
         googleTranslateAPIKey: String? = nil,
@@ -250,6 +257,11 @@ struct AppView: View {
         transcriptionEngine: String? = nil,
         translationTarget: String? = nil
     ) {
+        let nextTranslationEngine = translationEngine ?? self.translationEngine
+        let supportedTranslationEngine = (nextTranslationEngine == "ios" || nextTranslationEngine == "deepl") ? nextTranslationEngine : "ios"
+        let nextTranscriptionEngine = transcriptionEngine ?? self.transcriptionEngine
+        let supportedTranscriptionEngine = nextTranscriptionEngine == "whisperkit" ? nextTranscriptionEngine : "whisperkit"
+
         viewModel.configureServices(
             apiKey: apiKey ?? self.apiKey,
             googleTranslateAPIKey: googleTranslateAPIKey ?? self.googleTranslateAPIKey,
@@ -258,8 +270,8 @@ struct AppView: View {
             openAIAPIKey: openAIAPIKey ?? self.openAIAPIKey,
             assemblyAIAPIKey: assemblyAIAPIKey ?? self.assemblyAIAPIKey,
             whisperModel: whisperModel ?? self.whisperModel,
-            translationEngine: translationEngine ?? self.translationEngine,
-            transcriptionEngine: transcriptionEngine ?? self.transcriptionEngine,
+            translationEngine: supportedTranslationEngine,
+            transcriptionEngine: supportedTranscriptionEngine,
             translationTarget: translationTarget ?? self.translationTarget
         )
     }
@@ -273,7 +285,7 @@ private struct FirstLaunchPrivacyView: View {
             List {
                 Section {
                     Label("動画・音声・テキスト、字幕、拼音、翻訳、お気に入りは端末内に保存されます。", systemImage: "iphone")
-                    Label("クラウド翻訳やクラウド文字起こしを選ぶと、対象データが選択した外部サービスへ送信されます。", systemImage: "cloud")
+                    Label("DeepLを選ぶと翻訳対象の中国語テキストがDeepL APIへ送信されます。WhisperKitは端末内で文字起こしします。", systemImage: "cloud")
                 } header: {
                     Text("PinyinFlowのデータ利用")
                 }

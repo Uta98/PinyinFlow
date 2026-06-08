@@ -424,6 +424,7 @@ private struct TranscriptSegmentRow: View {
     let seek: () -> Void
     let toggleFavorite: () -> Void
     let edit: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -458,7 +459,7 @@ private struct TranscriptSegmentRow: View {
                     if showTranslation && segment.japaneseTranslation.isEmpty == false {
                         Text(TranscriptTextCleaner.clean(segment.japaneseTranslation))
                             .font(.system(size: 16 * textScale))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(colorScheme == .dark ? .white.opacity(0.86) : .secondary)
                             .textSelection(.enabled)
                     }
                 }
@@ -487,6 +488,7 @@ struct PinyinFlow: View {
     let textScale: Double
     var showsPinyin = true
     var showsChinese = true
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         FlowLayout(spacing: 8, lineSpacing: 8) {
@@ -495,11 +497,12 @@ struct PinyinFlow: View {
                     if showsPinyin {
                         Text(token.pinyin.isEmpty ? " " : token.pinyin)
                             .font(.system(size: 12 * textScale))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.titleAccent)
                     }
                     if showsChinese {
                         Text(token.character)
                             .font(.system(size: 20 * textScale, weight: .bold))
+                            .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     }
                 }
                 .frame(minWidth: 24)
