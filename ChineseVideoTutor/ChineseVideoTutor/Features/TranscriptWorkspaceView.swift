@@ -497,7 +497,7 @@ struct PinyinFlow: View {
                     if showsPinyin {
                         Text(token.pinyin.isEmpty ? " " : token.pinyin)
                             .font(.system(size: 12 * textScale))
-                            .foregroundStyle(AppTheme.titleAccent)
+                            .foregroundStyle(AppTheme.accent)
                     }
                     if showsChinese {
                         Text(token.character)

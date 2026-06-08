@@ -25,8 +25,8 @@ struct SettingsView: View {
     ]
 
     private let textSizes: [(label: String, value: Double)] = [
-        ("小", 0.78),
-        ("中", 1.0),
+        ("小", 0.86),
+        ("中", 0.92),
         ("大", 1.2)
     ]
     private let translationEngines = [
