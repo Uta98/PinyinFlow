@@ -183,17 +183,27 @@ struct AppleTranslationService: TranslationServicing {
 
     func translate(_ chineseTexts: [String]) async throws -> [String] {
         guard #available(iOS 26.0, *) else {
-            return Array(repeating: "", count: chineseTexts.count)
+            throw AppError.translationUnavailable("iOS純正翻訳は、このアプリの現在の実装ではiOS 26以降が必要です。設定でDeepLを選ぶと翻訳できます。")
         }
 
         let session = TranslationSession(
             installedSource: Locale.Language(identifier: "zh-Hans"),
             target: targetLanguage.appleLanguage
         )
+        do {
+            try await session.prepareTranslation()
+        } catch {
+            throw AppError.translationUnavailable("iOS純正翻訳の言語データを準備できませんでした。設定アプリの翻訳/言語設定、ネットワーク接続、端末の対応状況を確認してください。")
+        }
         let requests = chineseTexts.enumerated().map { index, text in
             TranslationSession.Request(sourceText: text, clientIdentifier: String(index))
         }
-        let responses = try await session.translations(from: requests)
+        let responses: [TranslationSession.Response]
+        do {
+            responses = try await session.translations(from: requests)
+        } catch {
+            throw AppError.translationUnavailable("iOS純正翻訳で翻訳を実行できませんでした。対応言語、言語データ、ネットワーク接続を確認するか、設定でDeepLを選択してください。")
+        }
         var responseByIndex: [Int: String] = [:]
         for response in responses {
             guard let identifier = response.clientIdentifier, let index = Int(identifier) else { continue }

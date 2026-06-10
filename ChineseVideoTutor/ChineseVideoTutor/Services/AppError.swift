@@ -8,6 +8,7 @@ enum AppError: LocalizedError {
     case missingAPIKey(String)
     case transcriptionFailed(String)
     case translationFailed
+    case translationUnavailable(String)
     case linkVideoNotFound
     case youtubeLinkUnsupported
 
@@ -27,6 +28,8 @@ enum AppError: LocalizedError {
             message.isEmpty ? "文字起こしに失敗しました。" : message
         case .translationFailed:
             "翻訳の作成に失敗しました。翻訳ツールの設定を確認してください。"
+        case .translationUnavailable(let reason):
+            "翻訳を作成できませんでした。\(reason)"
         case .linkVideoNotFound:
             "リンク先から動画を見つけられませんでした。共有リンクまたは動画URLを確認してください。"
         case .youtubeLinkUnsupported:

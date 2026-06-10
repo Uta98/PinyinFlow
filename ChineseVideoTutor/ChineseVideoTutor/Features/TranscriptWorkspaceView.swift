@@ -63,6 +63,14 @@ struct TranscriptWorkspaceView: View {
                     .background(.red.opacity(0.08))
             }
 
+            if let translationWarningMessage = viewModel.translationWarningMessage {
+                Label(translationWarningMessage, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(.orange.opacity(0.10))
+            }
+
             TranscriptTimelineView(
                 segments: viewModel.segments,
                 currentTime: currentTime,

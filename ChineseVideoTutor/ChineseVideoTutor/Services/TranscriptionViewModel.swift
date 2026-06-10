@@ -10,6 +10,7 @@ final class TranscriptionViewModel: ObservableObject {
     @Published var segments: [TranscriptSegment] = []
     @Published var history: [TranscriptSession] = []
     @Published var errorMessage: String?
+    @Published var translationWarningMessage: String?
     @Published var activeSessionID: TranscriptSession.ID?
     @Published var initialPlaybackTime: TimeInterval?
     @Published var isTextOnlySession = false
@@ -99,6 +100,7 @@ final class TranscriptionViewModel: ObservableObject {
             guard let url = try result.get().first else { return }
             phase = .importing
             errorMessage = nil
+            translationWarningMessage = nil
             selectedVideoURL = url
             selectedVideoName = url.lastPathComponent
             segments = []
@@ -116,6 +118,7 @@ final class TranscriptionViewModel: ObservableObject {
             guard let url = try result.get().first else { return }
             phase = .importing
             errorMessage = nil
+            translationWarningMessage = nil
             selectedVideoURL = url
             selectedVideoName = url.lastPathComponent
             segments = []
@@ -137,6 +140,7 @@ final class TranscriptionViewModel: ObservableObject {
         do {
             phase = .importing
             errorMessage = nil
+            translationWarningMessage = nil
             let fileName = "photo-\(UUID().uuidString).mov"
             selectedVideoURL = try FileImporter.copyVideoDataToDocuments(data, fileName: fileName)
             selectedVideoName = selectedVideoURL?.lastPathComponent
@@ -155,6 +159,7 @@ final class TranscriptionViewModel: ObservableObject {
     func prepareImportingPlaceholder(name: String) {
         phase = .importing
         errorMessage = nil
+        translationWarningMessage = nil
         selectedVideoName = name
         segments = []
         activeSessionID = nil
@@ -173,6 +178,7 @@ final class TranscriptionViewModel: ObservableObject {
 
             phase = .importing
             errorMessage = nil
+            translationWarningMessage = nil
             selectedVideoName = "XiaoHongShu"
             selectedVideoURL = nil
             segments = []
@@ -197,6 +203,7 @@ final class TranscriptionViewModel: ObservableObject {
         selectedVideoName = nil
         segments = []
         errorMessage = nil
+        translationWarningMessage = nil
         phase = .idle
         activeSessionID = nil
         initialPlaybackTime = nil
@@ -208,6 +215,7 @@ final class TranscriptionViewModel: ObservableObject {
         selectedVideoName = session.videoName
         segments = session.segments
         errorMessage = nil
+        translationWarningMessage = nil
         phase = .finished
         activeSessionID = session.id
         initialPlaybackTime = startTime
@@ -219,6 +227,7 @@ final class TranscriptionViewModel: ObservableObject {
         guard cleanedText.isEmpty == false else { return }
 
         errorMessage = nil
+        translationWarningMessage = nil
         selectedVideoURL = nil
         selectedVideoName = "テキスト"
         activeSessionID = nil
@@ -245,7 +254,7 @@ final class TranscriptionViewModel: ObservableObject {
                 textSegments[index].japaneseTranslation = TranscriptTextCleaner.clean(translations[index])
             }
         } catch {
-            errorMessage = error.localizedDescription
+            translationWarningMessage = translationWarning(for: error)
         }
 
         segments = textSegments
@@ -331,6 +340,7 @@ final class TranscriptionViewModel: ObservableObject {
 
         do {
             errorMessage = nil
+            translationWarningMessage = nil
             segments = []
 
             phase = .extractingAudio
@@ -372,7 +382,7 @@ final class TranscriptionViewModel: ObservableObject {
                     annotatedSegments[index].japaneseTranslation = TranscriptTextCleaner.clean(translations[index])
                 }
             } catch {
-                // Keep the transcript usable even when the selected translation tool is unavailable.
+                translationWarningMessage = translationWarning(for: error)
             }
 
             segments = annotatedSegments
@@ -382,6 +392,14 @@ final class TranscriptionViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             phase = .idle
         }
+    }
+
+    private func translationWarning(for error: Error) -> String {
+        let message = error.localizedDescription
+        if message.isEmpty {
+            return "翻訳を作成できませんでした。翻訳ツールの設定、端末の翻訳言語データ、ネットワーク接続を確認してください。"
+        }
+        return message
     }
 
     private func saveCurrentSession() {
