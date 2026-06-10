@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Translation
 
 enum TranslationTargetLanguage: String, CaseIterable, Identifiable, Sendable {
@@ -182,36 +183,181 @@ struct AppleTranslationService: TranslationServicing {
     }
 
     func translate(_ chineseTexts: [String]) async throws -> [String] {
-        guard #available(iOS 26.0, *) else {
-            throw AppError.translationUnavailable("iOS純正翻訳は、このアプリの現在の実装ではiOS 26以降が必要です。設定でDeepLを選ぶと翻訳できます。")
+        guard #available(iOS 18.0, *) else {
+            throw AppError.translationUnavailable("iOS純正翻訳はiOS 18以降で利用できます。設定でDeepLを選ぶと翻訳できます。")
         }
-
-        let session = TranslationSession(
-            installedSource: Locale.Language(identifier: "zh-Hans"),
-            target: targetLanguage.appleLanguage
+        return try await AppleTranslationRequestCenter.shared.translate(
+            chineseTexts,
+            targetLanguage: targetLanguage
         )
-        do {
-            try await session.prepareTranslation()
-        } catch {
-            throw AppError.translationUnavailable("iOS純正翻訳の言語データを準備できませんでした。設定アプリの翻訳/言語設定、ネットワーク接続、端末の対応状況を確認してください。")
+    }
+}
+
+@MainActor
+final class AppleTranslationRequestCenter: ObservableObject {
+    static let shared = AppleTranslationRequestCenter()
+
+    struct RequestSnapshot {
+        let id: UUID
+        let texts: [String]
+        let targetLanguage: TranslationTargetLanguage
+    }
+
+    @Published private(set) var requestID: UUID?
+    private var activeRequest: PendingRequest?
+    private var queuedRequests: [PendingRequest] = []
+
+    private init() {}
+
+    func translate(_ texts: [String], targetLanguage: TranslationTargetLanguage) async throws -> [String] {
+        guard texts.isEmpty == false else { return [] }
+        return try await withCheckedThrowingContinuation { continuation in
+            let request = PendingRequest(
+                id: UUID(),
+                texts: texts,
+                targetLanguage: targetLanguage,
+                continuation: continuation
+            )
+            if activeRequest == nil {
+                activeRequest = request
+                requestID = request.id
+            } else {
+                queuedRequests.append(request)
+            }
         }
-        let requests = chineseTexts.enumerated().map { index, text in
-            TranslationSession.Request(sourceText: text, clientIdentifier: String(index))
-        }
-        let responses: [TranslationSession.Response]
-        do {
-            responses = try await session.translations(from: requests)
-        } catch {
-            throw AppError.translationUnavailable("iOS純正翻訳で翻訳を実行できませんでした。対応言語、言語データ、ネットワーク接続を確認するか、設定でDeepLを選択してください。")
-        }
-        var responseByIndex: [Int: String] = [:]
-        for response in responses {
-            guard let identifier = response.clientIdentifier, let index = Int(identifier) else { continue }
-            responseByIndex[index] = response.targetText
+    }
+
+    func requestSnapshot(for id: UUID) -> RequestSnapshot? {
+        guard let activeRequest, activeRequest.id == id else { return nil }
+        return RequestSnapshot(
+            id: activeRequest.id,
+            texts: activeRequest.texts,
+            targetLanguage: activeRequest.targetLanguage
+        )
+    }
+
+    func complete(id: UUID, result: Result<[String], Error>) {
+        guard let activeRequest, activeRequest.id == id else { return }
+        switch result {
+        case .success(let translations):
+            activeRequest.continuation.resume(returning: translations)
+        case .failure(let error):
+            activeRequest.continuation.resume(throwing: error)
         }
 
-        return chineseTexts.indices.map { index in
-            responseByIndex[index]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if queuedRequests.isEmpty {
+            self.activeRequest = nil
+            requestID = nil
+        } else {
+            let nextRequest = queuedRequests.removeFirst()
+            self.activeRequest = nextRequest
+            requestID = nextRequest.id
+        }
+    }
+
+    private struct PendingRequest {
+        let id: UUID
+        let texts: [String]
+        let targetLanguage: TranslationTargetLanguage
+        let continuation: CheckedContinuation<[String], Error>
+    }
+}
+
+struct AppleTranslationTaskHost: View {
+    var body: some View {
+        if #available(iOS 18.0, *) {
+            AppleTranslationTaskHostAvailable(center: .shared)
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct AppleTranslationTaskHostAvailable: View {
+    @ObservedObject var center: AppleTranslationRequestCenter
+    @State private var configuration: TranslationSession.Configuration?
+    @State private var activeRequestID: UUID?
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .onAppear {
+                updateConfiguration(for: center.requestID)
+            }
+            .onChange(of: center.requestID) { _, newID in
+                updateConfiguration(for: newID)
+            }
+            .translationTask(configuration) { session in
+                await handleTranslation(session)
+            }
+    }
+
+    @MainActor
+    private func updateConfiguration(for requestID: UUID?) {
+        guard let requestID, let request = center.requestSnapshot(for: requestID) else {
+            activeRequestID = nil
+            configuration = nil
+            return
+        }
+
+        activeRequestID = request.id
+        var nextConfiguration = TranslationSession.Configuration(
+            source: Locale.Language(identifier: "zh-Hans"),
+            target: request.targetLanguage.appleLanguage
+        )
+        if configuration == nextConfiguration {
+            nextConfiguration.invalidate()
+        }
+        configuration = nextConfiguration
+    }
+
+    private func handleTranslation(_ session: TranslationSession) async {
+        guard let activeRequestID else { return }
+        guard let request = await MainActor.run(body: {
+            center.requestSnapshot(for: activeRequestID)
+        }) else { return }
+
+        do {
+            let sourceLanguage = Locale.Language(identifier: "zh-Hans")
+            let availability = LanguageAvailability()
+            let status = await availability.status(
+                from: sourceLanguage,
+                to: request.targetLanguage.appleLanguage
+            )
+            guard status != .unsupported else {
+                throw AppError.translationUnavailable("iOS純正翻訳がこの言語ペアに対応していません。設定でDeepLを選択してください。")
+            }
+
+            try await session.prepareTranslation()
+            let translationRequests = request.texts.enumerated().map { index, text in
+                TranslationSession.Request(sourceText: text, clientIdentifier: String(index))
+            }
+            let responses = try await session.translations(from: translationRequests)
+            var responseByIndex: [Int: String] = [:]
+            for response in responses {
+                guard let identifier = response.clientIdentifier, let index = Int(identifier) else { continue }
+                responseByIndex[index] = response.targetText
+            }
+            let translations = request.texts.indices.map { index in
+                responseByIndex[index]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            }
+            await MainActor.run {
+                center.complete(id: request.id, result: .success(translations))
+            }
+        } catch let error as AppError {
+            await MainActor.run {
+                center.complete(id: request.id, result: .failure(error))
+            }
+        } catch {
+            await MainActor.run {
+                center.complete(
+                    id: request.id,
+                    result: .failure(AppError.translationUnavailable("iOS純正翻訳で翻訳を実行できませんでした。言語データの準備、ネットワーク接続、端末の対応状況を確認するか、設定でDeepLを選択してください。"))
+                )
+            }
         }
     }
 }

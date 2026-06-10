@@ -144,6 +144,11 @@ struct AppView: View {
                 )
             }
         }
+        .overlay {
+            AppleTranslationTaskHost()
+                .frame(width: 0, height: 0)
+                .allowsHitTesting(false)
+        }
         .sheet(isPresented: $isShowingTextSheet) {
             TextImportSheet(inputText: $inputText) { text in
                 Task {

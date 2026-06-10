@@ -91,7 +91,7 @@ struct SettingsView: View {
                 } header: {
                     Text("翻訳ツール")
                 } footer: {
-                    SettingsDescriptionText("iOS純正は端末の翻訳機能と言語データを利用します。このアプリの現在の実装ではiOS 26以降が必要で、言語データの準備に失敗すると翻訳できない場合があります。DeepLを選ぶ場合は、中国語テキストをDeepL APIへ送信して翻訳します。")
+                    SettingsDescriptionText("iOS純正はiOS 18以降の端末翻訳機能を利用します。言語データが未インストールでもシステム側で準備を試みますが、端末の対応状況やネットワーク状態により失敗する場合があります。DeepLを選ぶ場合は、中国語テキストをDeepL APIへ送信して翻訳します。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
