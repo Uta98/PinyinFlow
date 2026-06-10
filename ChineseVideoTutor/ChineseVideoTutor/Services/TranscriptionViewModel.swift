@@ -365,10 +365,14 @@ final class TranscriptionViewModel: ObservableObject {
             let translationInputs = annotatedSegments.map {
                 TranscriptTextCleaner.cleanChinese($0.sourceText)
             }
-            let translations = try await translationService.translate(translationInputs)
-            for index in annotatedSegments.indices {
-                guard translations.indices.contains(index) else { continue }
-                annotatedSegments[index].japaneseTranslation = TranscriptTextCleaner.clean(translations[index])
+            do {
+                let translations = try await translationService.translate(translationInputs)
+                for index in annotatedSegments.indices {
+                    guard translations.indices.contains(index) else { continue }
+                    annotatedSegments[index].japaneseTranslation = TranscriptTextCleaner.clean(translations[index])
+                }
+            } catch {
+                // Keep the transcript usable even when the selected translation tool is unavailable.
             }
 
             segments = annotatedSegments

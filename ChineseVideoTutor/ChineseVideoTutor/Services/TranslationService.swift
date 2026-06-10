@@ -183,7 +183,7 @@ struct AppleTranslationService: TranslationServicing {
 
     func translate(_ chineseTexts: [String]) async throws -> [String] {
         guard #available(iOS 26.0, *) else {
-            throw AppError.translationFailed
+            return Array(repeating: "", count: chineseTexts.count)
         }
 
         let session = TranslationSession(
