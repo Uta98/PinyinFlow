@@ -29,7 +29,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>写真ライブラリから中国語動画を選択して文字起こしするために使用します。</string>
+	<string>写真ライブラリから中国語の動画や画像を選択し、文字起こしや画像内テキスト抽出を行うために使用します。</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>中国語動画の音声を文字起こしするために音声認識を使用します。</string>
 	<key>UIApplicationSceneManifest</key>

@@ -64,6 +64,7 @@ struct AppView: View {
     @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
     @AppStorage("subtitle.showTranslation") private var showSubtitleTranslation = true
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
+    @AppStorage("player.subtitleLoopPause") private var subtitleLoopPause = 0.6
     @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
     @State private var isShowingTextSheet = false
     @State private var isShowingPhotoPicker = false
@@ -126,6 +127,7 @@ struct AppView: View {
                         transcriptionEngine: $transcriptionEngine,
                         translationTarget: $translationTarget,
                         textScale: $textScale,
+                        subtitleLoopPause: $subtitleLoopPause,
                         showsDoneButton: false
                     )
                     .tabItem {
@@ -138,6 +140,7 @@ struct AppView: View {
                     viewModel: viewModel,
                     textScale: textScale,
                     playbackRate: $playbackRate,
+                    loopPauseDuration: subtitleLoopPause,
                     showPinyin: $showSubtitlePinyin,
                     showChinese: $showSubtitleChinese,
                     showTranslation: $showSubtitleTranslation
@@ -160,7 +163,7 @@ struct AppView: View {
         .photosPicker(
             isPresented: $isShowingPhotoPicker,
             selection: $selectedPhotoItem,
-            matching: .videos
+            matching: .any(of: [.videos, .images])
         )
         .sheet(isPresented: Binding(
             get: { privacyAccepted == false },
@@ -176,7 +179,7 @@ struct AppView: View {
         }
         .fileImporter(
             isPresented: $isImportingVideo,
-            allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie, .audio],
+            allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie, .audio, .image],
             allowsMultipleSelection: false
         ) { result in
             Task {
@@ -186,9 +189,10 @@ struct AppView: View {
         .onChange(of: selectedPhotoItem) { _, item in
             guard let item else { return }
             Task {
-                viewModel.prepareImportingPlaceholder(name: "写真の動画")
+                let isImage = item.supportedContentTypes.contains { $0.conforms(to: .image) }
+                viewModel.prepareImportingPlaceholder(name: isImage ? "写真の画像" : "写真の動画")
                 if let data = try? await item.loadTransferable(type: Data.self) {
-                    await viewModel.importPhotoVideo(data: data)
+                    await viewModel.importPhotoMedia(data: data, isImage: isImage)
                 } else {
                     viewModel.showHome()
                 }
@@ -289,7 +293,7 @@ private struct FirstLaunchPrivacyView: View {
         NavigationStack {
             List {
                 Section {
-                    Label("動画・音声・テキスト、字幕、拼音、翻訳、お気に入りは端末内に保存されます。", systemImage: "iphone")
+                    Label("動画・音声・画像・テキスト、字幕、拼音、翻訳、お気に入りは端末内に保存されます。", systemImage: "iphone")
                     Label("DeepLを選ぶと翻訳対象の中国語テキストがDeepL APIへ送信されます。WhisperKitは端末内で文字起こしします。", systemImage: "cloud")
                 } header: {
                     Text("PinyinFlowのデータ利用")
@@ -361,7 +365,7 @@ private struct ImportHomeView: View {
                     ContentUnavailableView(
                         "履歴はまだありません",
                         systemImage: "clock",
-                        description: Text("取り込んだ動画と字幕はここに保存されます。")
+                        description: Text("取り込んだ動画、音声、画像、テキストと字幕はここに保存されます。")
                     )
                     .padding(.top, 40)
                 } else if query.isEmpty {
@@ -722,9 +726,9 @@ private struct FavoriteNativeAdRow: View {
     let adUnitID: String
 
     var body: some View {
-        NativeAdCardView(adUnitID: adUnitID)
+        HorizontalNativeAdCardView(adUnitID: adUnitID)
             .frame(maxWidth: .infinity)
-            .frame(height: 132)
+            .frame(height: 96)
             .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
@@ -827,7 +831,7 @@ private struct HistoryTile: View {
     }
 
     private var shouldShowDuration: Bool {
-        session.isTextOnly == false && session.durationText != "0:00"
+        session.isTextOnly == false && session.isImageOnly == false && session.durationText != "0:00"
     }
 }
 
@@ -858,6 +862,8 @@ private struct HistoryPreview: View {
                     .font(.system(size: 34, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
             }
+        } else if session.isImageOnly {
+            StillImageView(url: session.videoURL)
         } else {
             VideoThumbnailView(url: session.videoURL)
         }
@@ -869,6 +875,25 @@ private struct HistoryPreview: View {
             .map { TranscriptTextCleaner.cleanChinese($0.sourceText) }
             .joined(separator: " ")
         return preview.isEmpty ? "テキスト" : preview
+    }
+}
+
+private struct StillImageView: View {
+    let url: URL
+
+    var body: some View {
+        if let image = UIImage(contentsOfFile: url.path) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+        } else {
+            Rectangle()
+                .fill(Color(.tertiarySystemFill))
+                .overlay {
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+        }
     }
 }
 

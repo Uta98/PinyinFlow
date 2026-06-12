@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import UIKit
+import Vision
 
 @MainActor
 final class TranscriptionViewModel: ObservableObject {
@@ -128,8 +129,38 @@ final class TranscriptionViewModel: ObservableObject {
             await Task.yield()
             selectedVideoURL = try FileImporter.copyToDocuments(url: url)
             selectedVideoName = selectedVideoURL?.lastPathComponent
+            if selectedVideoURL?.isImageFile == true {
+                await processSelectedImage()
+            } else {
+                phase = .idle
+                await processSelectedVideo()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
             phase = .idle
-            await processSelectedVideo()
+        }
+    }
+
+    func importPhotoMedia(data: Data, isImage: Bool) async {
+        do {
+            phase = .importing
+            errorMessage = nil
+            translationWarningMessage = nil
+            let fileName = isImage ? "photo-\(UUID().uuidString).jpg" : "photo-\(UUID().uuidString).mov"
+            selectedVideoURL = isImage
+                ? try FileImporter.copyImageDataToDocuments(data, fileName: fileName)
+                : try FileImporter.copyVideoDataToDocuments(data, fileName: fileName)
+            selectedVideoName = selectedVideoURL?.lastPathComponent
+            segments = []
+            activeSessionID = nil
+            initialPlaybackTime = nil
+            isTextOnlySession = false
+            if isImage {
+                await processSelectedImage()
+            } else {
+                phase = .idle
+                await processSelectedVideo()
+            }
         } catch {
             errorMessage = error.localizedDescription
             phase = .idle
@@ -137,23 +168,7 @@ final class TranscriptionViewModel: ObservableObject {
     }
 
     func importPhotoVideo(data: Data) async {
-        do {
-            phase = .importing
-            errorMessage = nil
-            translationWarningMessage = nil
-            let fileName = "photo-\(UUID().uuidString).mov"
-            selectedVideoURL = try FileImporter.copyVideoDataToDocuments(data, fileName: fileName)
-            selectedVideoName = selectedVideoURL?.lastPathComponent
-            segments = []
-            activeSessionID = nil
-            initialPlaybackTime = nil
-            isTextOnlySession = false
-            phase = .idle
-            await processSelectedVideo()
-        } catch {
-            errorMessage = error.localizedDescription
-            phase = .idle
-        }
+        await importPhotoMedia(data: data, isImage: false)
     }
 
     func prepareImportingPlaceholder(name: String) {
@@ -407,6 +422,54 @@ final class TranscriptionViewModel: ObservableObject {
         }
     }
 
+    func processSelectedImage() async {
+        guard let selectedVideoURL else { return }
+
+        do {
+            errorMessage = nil
+            translationWarningMessage = nil
+            segments = []
+
+            phase = .transcribing
+            let recognizedText = try await Self.recognizeText(in: selectedVideoURL)
+            let cleanedText = TranscriptTextCleaner.cleanChinese(recognizedText)
+            guard cleanedText.isEmpty == false else {
+                errorMessage = "画像から中国語テキストを抽出できませんでした。文字がはっきり写っている画像で再度お試しください。"
+                phase = .idle
+                return
+            }
+
+            phase = .annotating
+            var imageSegments = Self.splitTextIntoSegments(cleanedText).enumerated().map { offset, sentence in
+                TranscriptSegment(
+                    sourceText: sentence,
+                    pinyinTokens: pinyinAnnotator.tokens(for: sentence),
+                    japaneseTranslation: "",
+                    startTime: TimeInterval(offset),
+                    endTime: TimeInterval(offset + 1)
+                )
+            }
+
+            phase = .translating
+            do {
+                let translations = try await translationService.translate(imageSegments.map(\.sourceText))
+                for index in imageSegments.indices {
+                    guard translations.indices.contains(index) else { continue }
+                    imageSegments[index].japaneseTranslation = TranscriptTextCleaner.clean(translations[index])
+                }
+            } catch {
+                translationWarningMessage = translationWarning(for: error)
+            }
+
+            segments = imageSegments
+            saveCurrentSession()
+            phase = .finished
+        } catch {
+            errorMessage = error.localizedDescription
+            phase = .idle
+        }
+    }
+
     private func translationWarning(for error: Error) -> String {
         let message = error.localizedDescription
         if message.isEmpty {
@@ -497,6 +560,28 @@ final class TranscriptionViewModel: ObservableObject {
         return parts.isEmpty ? [text] : parts
     }
 
+    private static func recognizeText(in imageURL: URL) async throws -> String {
+        try await Task.detached(priority: .userInitiated) {
+            guard let image = UIImage(contentsOfFile: imageURL.path),
+                  let cgImage = image.cgImage else {
+                throw AppError.transcriptionFailed("画像を読み込めませんでした。")
+            }
+
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+            request.recognitionLanguages = ["zh-Hans", "zh-Hant", "en-US"]
+
+            let handler = VNImageRequestHandler(cgImage: cgImage, orientation: image.cgImagePropertyOrientation)
+            try handler.perform([request])
+
+            let lines = request.results?
+                .compactMap { $0.topCandidates(1).first?.string }
+                .filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false } ?? []
+            return lines.joined(separator: "\n")
+        }.value
+    }
+
     private func beginBackgroundTask() {
         endBackgroundTask()
         backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "TranscribeMedia") { [weak self] in
@@ -510,6 +595,31 @@ final class TranscriptionViewModel: ObservableObject {
         guard backgroundTaskID != .invalid else { return }
         UIApplication.shared.endBackgroundTask(backgroundTaskID)
         backgroundTaskID = .invalid
+    }
+}
+
+private extension UIImage {
+    var cgImagePropertyOrientation: CGImagePropertyOrientation {
+        switch imageOrientation {
+        case .up:
+            return .up
+        case .upMirrored:
+            return .upMirrored
+        case .down:
+            return .down
+        case .downMirrored:
+            return .downMirrored
+        case .left:
+            return .left
+        case .leftMirrored:
+            return .leftMirrored
+        case .right:
+            return .right
+        case .rightMirrored:
+            return .rightMirrored
+        @unknown default:
+            return .up
+        }
     }
 }
 

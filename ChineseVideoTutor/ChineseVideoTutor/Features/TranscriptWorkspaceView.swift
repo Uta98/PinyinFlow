@@ -5,12 +5,17 @@ struct TranscriptWorkspaceView: View {
     @ObservedObject var viewModel: TranscriptionViewModel
     let textScale: Double
     @Binding var playbackRate: Double
+    let loopPauseDuration: Double
     @Binding var showPinyin: Bool
     @Binding var showChinese: Bool
     @Binding var showTranslation: Bool
     @State private var player: AVPlayer?
     @State private var timeObserver: Any?
     @State private var currentTime: TimeInterval = 0
+    @State private var activeSegmentIDOverride: TranscriptSegment.ID?
+    @State private var suppressObserverActiveUpdateUntil = Date.distantPast
+    @State private var loopedSegmentID: TranscriptSegment.ID?
+    @State private var isLoopRestartScheduled = false
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
     @State private var hasRequestedProcessingInterstitial = false
@@ -26,7 +31,7 @@ struct TranscriptWorkspaceView: View {
             if isLandscape {
                 HStack(spacing: 0) {
                     videoSection(isLandscape: true)
-                        .frame(width: proxy.size.width * 0.54)
+                        .frame(width: proxy.size.width * 0.45)
                     subtitleSection
                 }
             } else {
@@ -85,6 +90,11 @@ struct TranscriptWorkspaceView: View {
             return
         }
 
+        guard url?.isImageFile != true else {
+            player = nil
+            return
+        }
+
         guard let url else {
             player = nil
             return
@@ -98,6 +108,10 @@ struct TranscriptWorkspaceView: View {
             queue: .main
         ) { time in
             currentTime = time.seconds
+            if Date() >= suppressObserverActiveUpdateUntil {
+                activeSegmentIDOverride = activeSegment(at: time.seconds)?.id
+            }
+            handleLoopIfNeeded(at: time.seconds)
         }
         if let pendingInitialSeek {
             nextPlayer.seek(
@@ -111,12 +125,49 @@ struct TranscriptWorkspaceView: View {
     }
 
     private func seek(to segment: TranscriptSegment) {
+        currentTime = segment.startTime
+        activeSegmentIDOverride = segment.id
+        suppressObserverActiveUpdateUntil = Date().addingTimeInterval(0.45)
         player?.seek(
             to: CMTime(seconds: segment.startTime, preferredTimescale: 600),
             toleranceBefore: .zero,
             toleranceAfter: .zero
         )
         player?.playImmediately(atRate: player?.defaultRate ?? playerRate)
+    }
+
+    private func toggleLoop(for segment: TranscriptSegment) {
+        loopedSegmentID = loopedSegmentID == segment.id ? nil : segment.id
+        isLoopRestartScheduled = false
+        seek(to: segment)
+    }
+
+    private func activeSegment(at time: TimeInterval) -> TranscriptSegment? {
+        viewModel.segments.first { $0.contains(time: time) }
+    }
+
+    private func handleLoopIfNeeded(at time: TimeInterval) {
+        guard
+            let loopedSegmentID,
+            isLoopRestartScheduled == false,
+            let segment = viewModel.segments.first(where: { $0.id == loopedSegmentID }),
+            time >= segment.endTime
+        else { return }
+
+        isLoopRestartScheduled = true
+        player?.pause()
+        Task { @MainActor in
+            let delay = max(loopPauseDuration, 0)
+            if delay > 0 {
+                try? await Task.sleep(for: .milliseconds(Int(delay * 1000)))
+            }
+            guard self.loopedSegmentID == segment.id else {
+                self.isLoopRestartScheduled = false
+                return
+            }
+            self.isLoopRestartScheduled = false
+            self.seek(to: segment)
+        }
     }
 
     private func removeTimeObserver() {
@@ -130,6 +181,7 @@ struct TranscriptWorkspaceView: View {
         guard
             viewModel.phase.isBusy,
             viewModel.isTextOnlySession == false,
+            viewModel.selectedVideoURL?.isImageFile != true,
             hasRequestedProcessingInterstitial == false
         else { return }
         hasRequestedProcessingInterstitial = true
@@ -191,6 +243,8 @@ struct TranscriptWorkspaceView: View {
             TranscriptTimelineView(
                 segments: viewModel.segments,
                 currentTime: currentTime,
+                activeSegmentID: activeSegmentIDOverride,
+                loopedSegmentID: loopedSegmentID,
                 textScale: textScale,
                 phase: viewModel.phase,
                 showPinyin: showPinyin,
@@ -199,7 +253,8 @@ struct TranscriptWorkspaceView: View {
                 seek: seek(to:),
                 toggleFavorite: { segment in
                     viewModel.toggleFavorite(segmentID: segment.id)
-                }
+                },
+                toggleLoop: toggleLoop(for:)
             ) { segment in
                 editingSegment = segment
             }
@@ -258,6 +313,8 @@ private struct VideoPane: View {
                 ProcessingMediaPane(phase: phase)
             } else if isTextOnly {
                 MediaIconPane(systemName: "text.quote")
+            } else if mediaURL?.isImageFile == true, let mediaURL {
+                ImagePane(url: mediaURL)
             } else if mediaURL?.isStandaloneAudioFile == true {
                 MediaIconPane(systemName: "waveform.circle.fill")
             } else if let player {
@@ -265,6 +322,22 @@ private struct VideoPane: View {
             } else {
                 MediaIconPane(systemName: "movie.badge.waveform")
             }
+        }
+    }
+}
+
+private struct ImagePane: View {
+    let url: URL
+
+    var body: some View {
+        if let image = UIImage(contentsOfFile: url.path) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.black)
+        } else {
+            MediaIconPane(systemName: "photo")
         }
     }
 }
@@ -361,6 +434,8 @@ private struct SystemVideoPlayer: UIViewControllerRepresentable {
 private struct TranscriptTimelineView: View {
     let segments: [TranscriptSegment]
     let currentTime: TimeInterval
+    let activeSegmentID: TranscriptSegment.ID?
+    let loopedSegmentID: TranscriptSegment.ID?
     let textScale: Double
     let phase: ProcessingPhase
     let showPinyin: Bool
@@ -368,10 +443,11 @@ private struct TranscriptTimelineView: View {
     let showTranslation: Bool
     let seek: (TranscriptSegment) -> Void
     let toggleFavorite: (TranscriptSegment) -> Void
+    let toggleLoop: (TranscriptSegment) -> Void
     let edit: (TranscriptSegment) -> Void
 
-    private var activeSegmentID: TranscriptSegment.ID? {
-        segments.first { $0.contains(time: currentTime) }?.id
+    private var resolvedActiveSegmentID: TranscriptSegment.ID? {
+        activeSegmentID ?? segments.first { $0.contains(time: currentTime) }?.id
     }
 
     var body: some View {
@@ -385,13 +461,15 @@ private struct TranscriptTimelineView: View {
                         ForEach(segments) { segment in
                             TranscriptSegmentRow(
                                 segment: segment,
-                                isActive: segment.id == activeSegmentID,
+                                isActive: segment.id == resolvedActiveSegmentID,
+                                isLooped: segment.id == loopedSegmentID,
                                 textScale: textScale,
                                 showPinyin: showPinyin,
                                 showChinese: showChinese,
                                 showTranslation: showTranslation,
                                 seek: { seek(segment) },
                                 toggleFavorite: { toggleFavorite(segment) },
+                                toggleLoop: { toggleLoop(segment) },
                                 edit: { edit(segment) }
                             )
                             .id(segment.id)
@@ -400,7 +478,7 @@ private struct TranscriptTimelineView: View {
                 }
                 .padding()
             }
-            .onChange(of: activeSegmentID) { _, id in
+            .onChange(of: resolvedActiveSegmentID) { _, id in
                 guard let id else { return }
                 withAnimation(.easeInOut(duration: 0.25)) {
                     proxy.scrollTo(id, anchor: .center)
@@ -446,28 +524,44 @@ private struct ProcessingSkeletonView: View {
 private struct TranscriptSegmentRow: View {
     let segment: TranscriptSegment
     let isActive: Bool
+    let isLooped: Bool
     let textScale: Double
     let showPinyin: Bool
     let showChinese: Bool
     let showTranslation: Bool
     let seek: () -> Void
     let toggleFavorite: () -> Void
+    let toggleLoop: () -> Void
     let edit: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Button {
-                toggleFavorite()
-            } label: {
-                Image(systemName: segment.isFavorite ? "star.fill" : "star")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(segment.isFavorite ? .yellow : .secondary)
-                    .frame(width: 18, height: 22)
-                    .contentShape(Rectangle())
+            VStack(spacing: 8) {
+                Button {
+                    toggleFavorite()
+                } label: {
+                    Image(systemName: segment.isFavorite ? "star.fill" : "star")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(segment.isFavorite ? .yellow : .secondary)
+                        .frame(width: 18, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
+
+                Button {
+                    toggleLoop()
+                } label: {
+                    Image(systemName: isLooped ? "pin.fill" : "pin")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(isLooped ? AppTheme.accent : .secondary)
+                        .frame(width: 18, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isLooped ? "字幕ループを解除" : "この字幕をループ")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
 
             Button {
                 seek()

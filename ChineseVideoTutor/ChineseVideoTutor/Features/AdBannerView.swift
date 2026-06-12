@@ -438,6 +438,179 @@ final class PinyinFlowNativeAdView: NativeAdView {
     }
 }
 
+struct HorizontalNativeAdCardView: UIViewRepresentable {
+    let adUnitID: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> PinyinFlowHorizontalNativeAdView {
+        let view = PinyinFlowHorizontalNativeAdView()
+        context.coordinator.nativeAdView = view
+        context.coordinator.load(adUnitID: adUnitID, rootViewController: view.parentViewController)
+        return view
+    }
+
+    func updateUIView(_ uiView: PinyinFlowHorizontalNativeAdView, context: Context) {
+        context.coordinator.nativeAdView = uiView
+        context.coordinator.load(adUnitID: adUnitID, rootViewController: uiView.parentViewController)
+    }
+
+    final class Coordinator: NSObject, NativeAdLoaderDelegate {
+        weak var nativeAdView: PinyinFlowHorizontalNativeAdView?
+        private var adLoader: AdLoader?
+        private var loadedAdUnitID = ""
+
+        @MainActor
+        func load(adUnitID: String, rootViewController: UIViewController?) {
+            guard AdMobRuntime.adsDisabled == false, loadedAdUnitID != adUnitID, adUnitID.isEmpty == false else { return }
+            loadedAdUnitID = adUnitID
+            AdMobRuntime.startIfNeeded()
+            adLoader = AdLoader(
+                adUnitID: adUnitID,
+                rootViewController: rootViewController,
+                adTypes: [.native],
+                options: nil
+            )
+            adLoader?.delegate = self
+            adLoader?.load(Request())
+        }
+
+        func adLoader(_ adLoader: AdLoader, didReceive nativeAd: NativeAd) {
+            nativeAdView?.configure(with: nativeAd)
+        }
+
+        func adLoader(_ adLoader: AdLoader, didFailToReceiveAdWithError error: Error) {
+            print("AdMob: failed to load horizontal native ad: \(error.localizedDescription)")
+        }
+    }
+}
+
+final class PinyinFlowHorizontalNativeAdView: NativeAdView {
+    private let iconImageView = UIImageView()
+    private let headlineLabel = UILabel()
+    private let bodyLabel = UILabel()
+    private let callToActionLabel = UILabel()
+    private let adBadgeLabel = UILabel()
+    private let textStack = UIStackView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setup()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(with ad: NativeAd) {
+        headlineLabel.text = ad.headline
+        bodyLabel.text = ad.body
+        callToActionLabel.text = ad.callToAction
+        iconImageView.image = ad.icon?.image
+        iconImageView.isHidden = ad.icon == nil
+        bodyLabel.isHidden = ad.body == nil
+        callToActionLabel.isHidden = ad.callToAction == nil
+        ad.rootViewController = parentViewController
+        nativeAd = ad
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+        layer.cornerRadius = 8
+        clipsToBounds = true
+
+        let content = UIView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        content.backgroundColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.16, green: 0.04, blue: 0.052, alpha: 1)
+                : UIColor.white
+        }
+        content.layer.cornerRadius = 8
+        content.clipsToBounds = true
+        addSubview(content)
+
+        adBadgeLabel.text = "Ad"
+        adBadgeLabel.font = .systemFont(ofSize: 10, weight: .bold)
+        adBadgeLabel.textColor = .white
+        adBadgeLabel.textAlignment = .center
+        adBadgeLabel.backgroundColor = UIColor(red: 0.56, green: 0.00, blue: 0.07, alpha: 0.86)
+        adBadgeLabel.layer.cornerRadius = 6
+        adBadgeLabel.clipsToBounds = true
+        adBadgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(adBadgeLabel)
+
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFill
+        iconImageView.layer.cornerRadius = 10
+        iconImageView.clipsToBounds = true
+        content.addSubview(iconImageView)
+
+        textStack.axis = .vertical
+        textStack.spacing = 3
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(textStack)
+
+        headlineLabel.font = .systemFont(ofSize: 14, weight: .heavy)
+        headlineLabel.textColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark ? .white : UIColor(red: 0.12, green: 0.05, blue: 0.06, alpha: 1)
+        }
+        headlineLabel.numberOfLines = 1
+
+        bodyLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        bodyLabel.textColor = .secondaryLabel
+        bodyLabel.numberOfLines = 2
+
+        callToActionLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        callToActionLabel.textColor = .white
+        callToActionLabel.textAlignment = .center
+        callToActionLabel.backgroundColor = UIColor(red: 0.56, green: 0.00, blue: 0.07, alpha: 1)
+        callToActionLabel.layer.cornerRadius = 10
+        callToActionLabel.clipsToBounds = true
+        callToActionLabel.isUserInteractionEnabled = false
+        callToActionLabel.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(callToActionLabel)
+
+        textStack.addArrangedSubview(headlineLabel)
+        textStack.addArrangedSubview(bodyLabel)
+
+        iconView = iconImageView
+        headlineView = headlineLabel
+        bodyView = bodyLabel
+        callToActionView = callToActionLabel
+
+        NSLayoutConstraint.activate([
+            content.leadingAnchor.constraint(equalTo: leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: trailingAnchor),
+            content.topAnchor.constraint(equalTo: topAnchor),
+            content.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            adBadgeLabel.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
+            adBadgeLabel.topAnchor.constraint(equalTo: content.topAnchor, constant: 10),
+            adBadgeLabel.widthAnchor.constraint(equalToConstant: 28),
+            adBadgeLabel.heightAnchor.constraint(equalToConstant: 18),
+
+            iconImageView.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 12),
+            iconImageView.topAnchor.constraint(equalTo: adBadgeLabel.bottomAnchor, constant: 8),
+            iconImageView.bottomAnchor.constraint(lessThanOrEqualTo: content.bottomAnchor, constant: -10),
+            iconImageView.widthAnchor.constraint(equalToConstant: 42),
+            iconImageView.heightAnchor.constraint(equalToConstant: 42),
+
+            textStack.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 10),
+            textStack.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: 7),
+            textStack.trailingAnchor.constraint(equalTo: callToActionLabel.leadingAnchor, constant: -10),
+
+            callToActionLabel.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -12),
+            callToActionLabel.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: 7),
+            callToActionLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 86),
+            callToActionLabel.heightAnchor.constraint(equalToConstant: 34)
+        ])
+    }
+}
+
 private extension UIView {
     var parentViewController: UIViewController? {
         sequence(first: self.next, next: { $0?.next })

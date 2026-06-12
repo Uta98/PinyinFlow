@@ -4,6 +4,10 @@ extension URL {
     var isStandaloneAudioFile: Bool {
         ["mp3", "m4a", "aac", "wav", "aiff", "aif", "caf"].contains(pathExtension.lowercased())
     }
+
+    var isImageFile: Bool {
+        ["jpg", "jpeg", "png", "heic", "heif", "webp", "tiff", "tif"].contains(pathExtension.lowercased())
+    }
 }
 
 enum FileImporter {
@@ -24,15 +28,22 @@ enum FileImporter {
         }
     }
 
+    static var importedImagesDirectory: URL {
+        get throws {
+            try documentsURL.appendingPathComponent("ImportedImages", isDirectory: true)
+        }
+    }
+
     static func storagePath(for url: URL) -> String {
-        guard let videosURL = try? importedMediaDirectory else {
+        let directory = url.isImageFile ? (try? importedImagesDirectory) : (try? importedMediaDirectory)
+        guard let mediaDirectory = directory else {
             return url.path
         }
 
-        let mediaPath = videosURL.standardizedFileURL.path
+        let mediaPath = mediaDirectory.standardizedFileURL.path
         let filePath = url.standardizedFileURL.path
         if filePath.hasPrefix(mediaPath) {
-            return "ImportedVideos/" + url.lastPathComponent
+            return "\(url.isImageFile ? "ImportedImages" : "ImportedVideos")/" + url.lastPathComponent
         }
         return url.path
     }
@@ -48,8 +59,11 @@ enum FileImporter {
                 return absoluteURL
             }
 
-            if let videosURL = try? importedMediaDirectory {
-                return videosURL.appendingPathComponent(absoluteURL.lastPathComponent)
+            if absoluteURL.isImageFile, let imagesURL = try? importedImagesDirectory {
+                return imagesURL.appendingPathComponent(absoluteURL.lastPathComponent)
+            }
+            if let mediaURL = try? importedMediaDirectory {
+                return mediaURL.appendingPathComponent(absoluteURL.lastPathComponent)
             }
             return absoluteURL
         }
@@ -68,10 +82,10 @@ enum FileImporter {
             }
         }
 
-        let videosURL = try importedMediaDirectory
-        try FileManager.default.createDirectory(at: videosURL, withIntermediateDirectories: true)
+        let mediaURL = try url.isImageFile ? importedImagesDirectory : importedMediaDirectory
+        try FileManager.default.createDirectory(at: mediaURL, withIntermediateDirectories: true)
 
-        let destinationURL = videosURL.appendingPathComponent("\(UUID().uuidString)-\(url.lastPathComponent)")
+        let destinationURL = mediaURL.appendingPathComponent("\(UUID().uuidString)-\(url.lastPathComponent)")
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try FileManager.default.removeItem(at: destinationURL)
         }
@@ -84,6 +98,18 @@ enum FileImporter {
         try FileManager.default.createDirectory(at: videosURL, withIntermediateDirectories: true)
 
         let destinationURL = videosURL.appendingPathComponent(fileName)
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            try FileManager.default.removeItem(at: destinationURL)
+        }
+        try data.write(to: destinationURL, options: .atomic)
+        return destinationURL
+    }
+
+    static func copyImageDataToDocuments(_ data: Data, fileName: String) throws -> URL {
+        let imagesURL = try importedImagesDirectory
+        try FileManager.default.createDirectory(at: imagesURL, withIntermediateDirectories: true)
+
+        let destinationURL = imagesURL.appendingPathComponent(fileName)
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try FileManager.default.removeItem(at: destinationURL)
         }

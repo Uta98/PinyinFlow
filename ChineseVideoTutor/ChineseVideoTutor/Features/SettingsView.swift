@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Binding var transcriptionEngine: String
     @Binding var translationTarget: String
     @Binding var textScale: Double
+    @Binding var subtitleLoopPause: Double
     var showsDoneButton = true
     @Environment(\.dismiss) private var dismiss
 
@@ -36,6 +37,12 @@ struct SettingsView: View {
     private let transcriptionEngines = [
         ("whisperkit", "WhisperKit")
     ]
+    private let loopPauses: [(label: String, value: Double)] = [
+        ("なし", 0.0),
+        ("短め", 0.4),
+        ("標準", 0.8),
+        ("長め", 1.4)
+    ]
 
     private var textSizeSelection: Binding<Double> {
         Binding(
@@ -53,6 +60,15 @@ struct SettingsView: View {
         default:
             return nil
         }
+    }
+
+    private var loopPauseSelection: Binding<Double> {
+        Binding(
+            get: {
+                loopPauses.min(by: { abs($0.value - subtitleLoopPause) < abs($1.value - subtitleLoopPause) })?.value ?? 0.8
+            },
+            set: { subtitleLoopPause = $0 }
+        )
     }
 
     private var transcriptionCredentialWarning: String? {
@@ -128,6 +144,17 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     SettingsDescriptionText("字幕とお気に入りに表示される中国語・拼音・翻訳の文字サイズに反映されます。")
+                }
+                .listRowBackground(AppTheme.settingsRowBackground)
+
+                Section("再生") {
+                    Picker("字幕ループ間隔", selection: loopPauseSelection) {
+                        ForEach(loopPauses, id: \.value) { pause in
+                            Text(pause.label).tag(pause.value)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    SettingsDescriptionText("字幕左のピンをオンにした時、同じフレーズを繰り返すまでの待ち時間です。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -240,7 +267,7 @@ private struct PrivacyInfoView: View {
         SettingsTextPage {
             SettingsTextBlock(
                 title: "端末内に保存するデータ",
-                text: "取り込んだ動画・音声、入力した中国語テキスト、文字起こし、拼音、翻訳、お気に入り状態をアプリ内のDocuments領域に保存します。"
+                text: "取り込んだ動画・音声・画像、入力した中国語テキスト、文字起こし、画像内テキスト抽出、拼音、翻訳、お気に入り状態をアプリ内のDocuments領域に保存します。"
             )
             SettingsTextBlock(
                 title: "外部サービス",
@@ -252,7 +279,7 @@ private struct PrivacyInfoView: View {
             )
             SettingsTextBlock(
                 title: "権限",
-                text: "写真から動画を選ぶ場合は写真ライブラリの選択UIを使用します。ファイルを取り込む場合は、ユーザーが選択したファイルのみ読み込みます。"
+                text: "写真から動画や画像を選ぶ場合は写真ライブラリの選択UIを使用します。ファイルを取り込む場合は、ユーザーが選択したファイルのみ読み込みます。"
             )
         }
         .navigationTitle("プライバシー")
@@ -268,7 +295,7 @@ private struct PrivacyPolicyView: View {
             )
             SettingsTextBlock(
                 title: "1. アプリ内に保存される情報",
-                text: "本アプリは、ユーザーが取り込んだ動画・音声ファイル、入力した中国語テキスト、文字起こし結果、拼音、翻訳、お気に入り状態、履歴情報、アプリ設定を端末内に保存します。これらの情報は、履歴表示、再生、字幕表示、お気に入り表示、設定の維持のために使用されます。"
+                text: "本アプリは、ユーザーが取り込んだ動画・音声・画像ファイル、入力した中国語テキスト、文字起こし結果、画像内テキスト抽出結果、拼音、翻訳、お気に入り状態、履歴情報、アプリ設定を端末内に保存します。これらの情報は、履歴表示、再生、字幕表示、お気に入り表示、設定の維持のために使用されます。"
             )
             SettingsTextBlock(
                 title: "2. 外部サービスへの送信",
@@ -288,7 +315,7 @@ private struct PrivacyPolicyView: View {
             )
             SettingsTextBlock(
                 title: "6. データの削除",
-                text: "履歴の長押し削除により、保存済みの動画・音声・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。"
+                text: "履歴の長押し削除により、保存済みの動画・音声・画像・字幕データを削除できます。アプリを削除すると端末内に保存されたデータも削除されます。"
             )
             SettingsTextBlock(
                 title: "7. 免責",
@@ -312,11 +339,11 @@ private struct TermsOfUseView: View {
         SettingsTextPage {
             SettingsTextBlock(
                 title: "利用目的",
-                text: "PinyinFlowは、中国語の学習補助を目的として、動画・音声・テキストに拼音と翻訳を付与するアプリです。翻訳や文字起こしの結果は完全性を保証するものではありません。"
+                text: "PinyinFlowは、中国語の学習補助を目的として、動画・音声・画像・テキストに拼音と翻訳を付与するアプリです。翻訳や文字起こし、画像内テキスト抽出の結果は完全性を保証するものではありません。"
             )
             SettingsTextBlock(
                 title: "ユーザーの責任",
-                text: "取り込む動画・音声・テキストは、ユーザー自身が利用権限を持つものを使用してください。第三者の権利を侵害する利用は禁止します。"
+                text: "取り込む動画・音声・画像・テキストは、ユーザー自身が利用権限を持つものを使用してください。第三者の権利を侵害する利用は禁止します。"
             )
             SettingsTextBlock(
                 title: "外部サービス",

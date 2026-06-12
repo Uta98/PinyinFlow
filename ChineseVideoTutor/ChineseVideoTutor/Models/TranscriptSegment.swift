@@ -117,6 +117,10 @@ struct TranscriptSession: Identifiable, Hashable, Codable {
         isTextOnly == false && videoURL.isStandaloneAudioFile
     }
 
+    var isImageOnly: Bool {
+        isTextOnly == false && videoURL.isImageFile
+    }
+
     var mediaFileExists: Bool {
         isTextOnly || FileManager.default.fileExists(atPath: videoURL.path)
     }
