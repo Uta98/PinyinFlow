@@ -64,7 +64,7 @@ struct AppView: View {
     @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
     @AppStorage("subtitle.showTranslation") private var showSubtitleTranslation = true
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
-    @AppStorage("player.subtitleLoopPause") private var subtitleLoopPause = 0.6
+    @AppStorage("player.subtitleLoopPause") private var subtitleLoopPause = 0.4
     @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
     @State private var isShowingTextSheet = false
     @State private var isShowingPhotoPicker = false
@@ -820,6 +820,11 @@ private struct HistoryTile: View {
                     if shouldShowDuration {
                         DurationBadge(text: session.durationText)
                     }
+
+                    if session.isImageOnly {
+                        ImageKindBadge()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    }
                 }
             }
             .aspectRatio(9.0 / 16.0, contentMode: .fit)
@@ -832,6 +837,17 @@ private struct HistoryTile: View {
 
     private var shouldShowDuration: Bool {
         session.isTextOnly == false && session.isImageOnly == false && session.durationText != "0:00"
+    }
+}
+
+private struct ImageKindBadge: View {
+    var body: some View {
+        Image(systemName: "photo")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .frame(width: 24, height: 24)
+            .background(.black.opacity(0.62), in: Circle())
+            .padding(5)
     }
 }
 

@@ -550,13 +550,15 @@ private struct TranscriptSegmentRow: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
 
+                Spacer(minLength: 28)
+
                 Button {
                     toggleLoop()
                 } label: {
                     Image(systemName: isLooped ? "pin.fill" : "pin")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(isLooped ? AppTheme.accent : .secondary)
-                        .frame(width: 18, height: 22)
+                        .frame(width: 22, height: 24)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

@@ -39,8 +39,8 @@ struct SettingsView: View {
     ]
     private let loopPauses: [(label: String, value: Double)] = [
         ("なし", 0.0),
-        ("短め", 0.4),
-        ("標準", 0.8),
+        ("短め", 0.2),
+        ("標準", 0.4),
         ("長め", 1.4)
     ]
 
@@ -148,7 +148,7 @@ struct SettingsView: View {
                 .listRowBackground(AppTheme.settingsRowBackground)
 
                 Section("再生") {
-                    Picker("字幕ループ間隔", selection: loopPauseSelection) {
+                    Picker("ループ再生時間", selection: loopPauseSelection) {
                         ForEach(loopPauses, id: \.value) { pause in
                             Text(pause.label).tag(pause.value)
                         }
