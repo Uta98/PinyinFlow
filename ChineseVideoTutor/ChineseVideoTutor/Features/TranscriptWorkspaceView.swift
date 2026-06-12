@@ -550,7 +550,7 @@ private struct TranscriptSegmentRow: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
 
-                Spacer(minLength: 28)
+                Spacer(minLength: pinButtonTopSpacing)
 
                 Button {
                     toggleLoop()
@@ -605,6 +605,14 @@ private struct TranscriptSegmentRow: View {
                     edit()
                 }
         )
+    }
+
+    private var pinButtonTopSpacing: CGFloat {
+        guard showPinyin || showChinese else { return 8 }
+        if showPinyin && showChinese {
+            return CGFloat(54 * textScale)
+        }
+        return CGFloat(30 * textScale)
     }
 }
 

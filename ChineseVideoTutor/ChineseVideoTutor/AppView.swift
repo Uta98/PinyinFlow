@@ -49,6 +49,7 @@ enum AppTheme {
 
 struct AppView: View {
     @StateObject private var viewModel = TranscriptionViewModel()
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("deepl.apiKey") private var apiKey = ""
     @AppStorage("googleTranslate.apiKey") private var googleTranslateAPIKey = ""
     @AppStorage("azureTranslate.apiKey") private var azureTranslateAPIKey = ""
@@ -203,6 +204,11 @@ struct AppView: View {
             normalizeToolSelections()
             configurePlaybackAudioSession()
             configureViewModelServices()
+            processPendingIntentImageIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            processPendingIntentImageIfNeeded()
         }
         .onChange(of: apiKey) { _, newValue in
             configureViewModelServices(apiKey: newValue)
@@ -283,6 +289,13 @@ struct AppView: View {
             transcriptionEngine: supportedTranscriptionEngine,
             translationTarget: translationTarget ?? self.translationTarget
         )
+    }
+
+    private func processPendingIntentImageIfNeeded() {
+        guard let url = PendingScreenshotImportStore.consumePendingURL() else { return }
+        Task {
+            await viewModel.importImageFromIntent(url: url)
+        }
     }
 }
 

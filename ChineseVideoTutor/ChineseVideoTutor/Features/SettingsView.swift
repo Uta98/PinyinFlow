@@ -158,6 +158,22 @@ struct SettingsView: View {
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
+                Section("ショートカット") {
+                    HStack(spacing: 12) {
+                        Image(systemName: "text.viewfinder")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(AppTheme.settingsAccent)
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("スクリーンショットを読み取る")
+                                .font(.body.weight(.semibold))
+                            SettingsDescriptionText("ショートカットで画像を渡すと、PinyinFlowが開いて中国語テキストの抽出、拼音、翻訳を表示します。アクションボタンへは、iPhoneの設定アプリで「アクションボタン」からこのショートカットを割り当ててください。")
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .listRowBackground(AppTheme.settingsRowBackground)
+
                 Section("サポートと情報") {
                     NavigationLink("プライバシーとデータ利用") {
                         PrivacyInfoView()

@@ -470,6 +470,19 @@ final class TranscriptionViewModel: ObservableObject {
         }
     }
 
+    func importImageFromIntent(url: URL) async {
+        selectedVideoURL = url
+        selectedVideoName = "スクリーンショット"
+        initialPlaybackTime = nil
+        activeSessionID = nil
+        segments = []
+        errorMessage = nil
+        translationWarningMessage = nil
+        isTextOnlySession = false
+        phase = .importing
+        await processSelectedImage()
+    }
+
     private func translationWarning(for error: Error) -> String {
         let message = error.localizedDescription
         if message.isEmpty {
