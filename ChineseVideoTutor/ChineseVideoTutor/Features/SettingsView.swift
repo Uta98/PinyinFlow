@@ -147,14 +147,17 @@ struct SettingsView: View {
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
-                Section("再生") {
+                Section {
                     Picker("ループ再生時間", selection: loopPauseSelection) {
                         ForEach(loopPauses, id: \.value) { pause in
                             Text(pause.label).tag(pause.value)
                         }
                     }
                     .pickerStyle(.segmented)
-                    SettingsDescriptionText("字幕左のピンをオンにした時、同じフレーズを繰り返すまでの待ち時間です。")
+                } header: {
+                    Text("ループ再生")
+                } footer: {
+                    SettingsDescriptionText("ループ再生は、字幕左のピンをオンにしたフレーズだけを繰り返し再生する機能です。この設定では、ループ再生で同じ字幕へ戻るまでの待ち時間を変更できます。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
@@ -167,10 +170,17 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("スクリーンショットを読み取る")
                                 .font(.body.weight(.semibold))
-                            SettingsDescriptionText("ショートカットで画像を渡すと、PinyinFlowが開いて中国語テキストの抽出、拼音、翻訳を表示します。アクションボタンへは、iPhoneの設定アプリで「アクションボタン」からこのショートカットを割り当ててください。")
+                            SettingsDescriptionText("ショートカットで「スクリーンショットを撮る」から画像を渡すと、PinyinFlowが開いて中国語テキストの抽出、拼音、翻訳を表示します。受け取ったスクショはsafe area相当に自動クロップして読み取ります。")
                         }
                     }
                     .padding(.vertical, 4)
+
+                    Link(destination: URL(string: "shortcuts://")!) {
+                        Label("ショートカットアプリで追加", systemImage: "plus.circle")
+                            .font(.body.weight(.semibold))
+                    }
+
+                    SettingsDescriptionText("PinyinFlowからアクションボタンの割り当て自体は変更できません。ショートカット作成後、iPhoneの設定アプリで「アクションボタン」からそのショートカットを割り当ててください。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 

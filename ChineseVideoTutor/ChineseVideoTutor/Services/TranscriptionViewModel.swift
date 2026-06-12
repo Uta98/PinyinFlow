@@ -471,7 +471,8 @@ final class TranscriptionViewModel: ObservableObject {
     }
 
     func importImageFromIntent(url: URL) async {
-        selectedVideoURL = url
+        let imageURL = safeAreaCroppedScreenshotURL(from: url) ?? url
+        selectedVideoURL = imageURL
         selectedVideoName = "スクリーンショット"
         initialPlaybackTime = nil
         activeSessionID = nil
@@ -481,6 +482,59 @@ final class TranscriptionViewModel: ObservableObject {
         isTextOnlySession = false
         phase = .importing
         await processSelectedImage()
+    }
+
+    private func safeAreaCroppedScreenshotURL(from url: URL) -> URL? {
+        guard
+            let image = UIImage(contentsOfFile: url.path),
+            let cgImage = image.cgImage
+        else {
+            return nil
+        }
+
+        let screenBounds = UIScreen.main.bounds
+        guard screenBounds.width > 0, screenBounds.height > 0 else {
+            return nil
+        }
+
+        let pixelWidth = CGFloat(cgImage.width)
+        let pixelHeight = CGFloat(cgImage.height)
+        let screenRatio = screenBounds.width / screenBounds.height
+        let imageRatio = pixelWidth / pixelHeight
+        guard abs(screenRatio - imageRatio) < 0.08 else {
+            return nil
+        }
+
+        let insets = currentWindowSafeAreaInsets()
+        guard insets.top > 0 || insets.bottom > 0 else {
+            return nil
+        }
+
+        let scaleX = pixelWidth / screenBounds.width
+        let scaleY = pixelHeight / screenBounds.height
+        let cropRect = CGRect(
+            x: 0,
+            y: insets.top * scaleY,
+            width: pixelWidth,
+            height: pixelHeight - ((insets.top + insets.bottom) * scaleY)
+        ).integral
+
+        guard cropRect.width > 0, cropRect.height > 0, let croppedCGImage = cgImage.cropping(to: cropRect) else {
+            return nil
+        }
+
+        let croppedImage = UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
+        guard let data = croppedImage.pngData() else {
+            return nil
+        }
+
+        return try? FileImporter.copyImageDataToDocuments(data, fileName: "shortcut-safearea-\(UUID().uuidString).png")
+    }
+
+    private func currentWindowSafeAreaInsets() -> UIEdgeInsets {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes.flatMap(\.windows).first { $0.isKeyWindow }
+        return keyWindow?.safeAreaInsets ?? .zero
     }
 
     private func translationWarning(for error: Error) -> String {

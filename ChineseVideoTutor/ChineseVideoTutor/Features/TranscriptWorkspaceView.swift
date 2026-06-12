@@ -610,9 +610,13 @@ private struct TranscriptSegmentRow: View {
     private var pinButtonTopSpacing: CGFloat {
         guard showPinyin || showChinese else { return 8 }
         if showPinyin && showChinese {
-            return CGFloat(54 * textScale)
+            return CGFloat((isSingleLineCaption ? 34 : 54) * textScale)
         }
         return CGFloat(30 * textScale)
+    }
+
+    private var isSingleLineCaption: Bool {
+        segment.pinyinTokens.count <= 10
     }
 }
 
