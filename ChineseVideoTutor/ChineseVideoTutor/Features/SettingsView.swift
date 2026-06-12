@@ -136,13 +136,16 @@ struct SettingsView: View {
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
-                Section("表示") {
+                Section {
                     Picker("文字サイズ", selection: textSizeSelection) {
                         ForEach(textSizes, id: \.value) { size in
                             Text(size.label).tag(size.value)
                         }
                     }
                     .pickerStyle(.segmented)
+                } header: {
+                    Text("字幕文字サイズ")
+                } footer: {
                     SettingsDescriptionText("字幕とお気に入りに表示される中国語・拼音・翻訳の文字サイズに反映されます。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
@@ -170,17 +173,20 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("スクリーンショットを読み取る")
                                 .font(.body.weight(.semibold))
-                            SettingsDescriptionText("ショートカットで「スクリーンショットを撮る」から画像を渡すと、PinyinFlowが開いて中国語テキストの抽出、拼音、翻訳を表示します。受け取ったスクショはsafe area相当に自動クロップして読み取ります。")
+                            SettingsDescriptionText("ショートカットで「スクリーンショットを撮る」を実行すると、PinyinFlowが開いて中国語テキストの抽出、拼音、翻訳を表示します。iPhone本体の設定＞アクションボタン＞ショートカットからこのショートカットを追加すると、アクションボタンの長押しのみで実行できて便利です。")
                         }
                     }
                     .padding(.vertical, 4)
 
-                    Link(destination: URL(string: "shortcuts://")!) {
+                    Link(destination: URL(string: "https://www.icloud.com/shortcuts/d1ceb0c693c1470cbee2717fd3a798ba")!) {
                         Label("ショートカットアプリで追加", systemImage: "plus.circle")
                             .font(.body.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .foregroundStyle(.white)
+                            .background(AppTheme.settingsAccent)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-
-                    SettingsDescriptionText("PinyinFlowからアクションボタンの割り当て自体は変更できません。ショートカット作成後、iPhoneの設定アプリで「アクションボタン」からそのショートカットを割り当ててください。")
                 }
                 .listRowBackground(AppTheme.settingsRowBackground)
 
