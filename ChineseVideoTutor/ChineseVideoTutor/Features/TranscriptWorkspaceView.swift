@@ -21,70 +21,20 @@ struct TranscriptWorkspaceView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            VideoPane(
-                player: player,
-                mediaURL: viewModel.selectedVideoURL,
-                isTextOnly: viewModel.isTextOnlySession,
-                phase: viewModel.phase
-            )
-                .frame(maxWidth: .infinity)
-                .frame(height: 360)
-                .background(.black)
-                .overlay(alignment: .topLeading) {
-                    Button {
-                        viewModel.showHome()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.headline)
-                            .frame(width: 42, height: 42)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 52)
-                    .padding(.leading, 16)
-                    .accessibilityLabel("履歴に戻る")
+        GeometryReader { proxy in
+            let isLandscape = proxy.size.width > proxy.size.height
+            if isLandscape {
+                HStack(spacing: 0) {
+                    videoSection(isLandscape: true)
+                        .frame(width: proxy.size.width * 0.54)
+                    subtitleSection
                 }
-                .overlay(alignment: .topTrailing) {
-                    SubtitleDisplayMenu(
-                        showPinyin: $showPinyin,
-                        showChinese: $showChinese,
-                        showTranslation: $showTranslation
-                    )
-                    .padding(.top, 52)
-                    .padding(.trailing, 16)
+            } else {
+                VStack(spacing: 0) {
+                    videoSection(isLandscape: false)
+                        .frame(height: min(360, proxy.size.height * 0.43))
+                    subtitleSection
                 }
-
-            if let errorMessage = viewModel.errorMessage {
-                Label(errorMessage, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(.red.opacity(0.08))
-            }
-
-            if let translationWarningMessage = viewModel.translationWarningMessage {
-                Label(translationWarningMessage, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(.orange.opacity(0.10))
-            }
-
-            TranscriptTimelineView(
-                segments: viewModel.segments,
-                currentTime: currentTime,
-                textScale: textScale,
-                phase: viewModel.phase,
-                showPinyin: showPinyin,
-                showChinese: showChinese,
-                showTranslation: showTranslation,
-                seek: seek(to:),
-                toggleFavorite: { segment in
-                    viewModel.toggleFavorite(segmentID: segment.id)
-                }
-            ) { segment in
-                editingSegment = segment
             }
         }
         .sheet(item: $editingSegment) { segment in
@@ -183,7 +133,78 @@ struct TranscriptWorkspaceView: View {
             hasRequestedProcessingInterstitial == false
         else { return }
         hasRequestedProcessingInterstitial = true
-        interstitialPresenter.present(adUnitID: AdMobAdUnits.interstitial)
+            interstitialPresenter.present(adUnitID: AdMobAdUnits.interstitial)
+    }
+
+    private func videoSection(isLandscape: Bool) -> some View {
+        VideoPane(
+            player: player,
+            mediaURL: viewModel.selectedVideoURL,
+            isTextOnly: viewModel.isTextOnlySession,
+            phase: viewModel.phase
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black)
+        .overlay(alignment: .topLeading) {
+            Button {
+                viewModel.showHome()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.headline)
+                    .frame(width: 42, height: 42)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, isLandscape ? 12 : 52)
+            .padding(.leading, 16)
+            .accessibilityLabel("履歴に戻る")
+        }
+        .overlay(alignment: .topTrailing) {
+            SubtitleDisplayMenu(
+                showPinyin: $showPinyin,
+                showChinese: $showChinese,
+                showTranslation: $showTranslation
+            )
+            .padding(.top, isLandscape ? 12 : 52)
+            .padding(.trailing, 16)
+        }
+    }
+
+    private var subtitleSection: some View {
+        VStack(spacing: 0) {
+            if let errorMessage = viewModel.errorMessage {
+                Label(errorMessage, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(.red.opacity(0.08))
+            }
+
+            if let translationWarningMessage = viewModel.translationWarningMessage {
+                Label(translationWarningMessage, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(.orange.opacity(0.10))
+            }
+
+            TranscriptTimelineView(
+                segments: viewModel.segments,
+                currentTime: currentTime,
+                textScale: textScale,
+                phase: viewModel.phase,
+                showPinyin: showPinyin,
+                showChinese: showChinese,
+                showTranslation: showTranslation,
+                seek: seek(to:),
+                toggleFavorite: { segment in
+                    viewModel.toggleFavorite(segmentID: segment.id)
+                }
+            ) { segment in
+                editingSegment = segment
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -197,7 +218,7 @@ private struct SubtitleDisplayMenu: View {
         Button {
             isShowingPanel = true
         } label: {
-            Image(systemName: "textformat")
+            Image(systemName: "captions.bubble")
                 .font(.headline)
                 .frame(width: 42, height: 42)
                 .background(.ultraThinMaterial, in: Circle())

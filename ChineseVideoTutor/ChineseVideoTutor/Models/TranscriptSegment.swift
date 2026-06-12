@@ -106,7 +106,7 @@ struct TranscriptSession: Identifiable, Hashable, Codable {
     var segments: [TranscriptSegment]
 
     var videoURL: URL {
-        URL(fileURLWithPath: videoPath)
+        FileImporter.resolvedMediaURL(from: videoPath)
     }
 
     var isTextOnly: Bool {
@@ -114,11 +114,16 @@ struct TranscriptSession: Identifiable, Hashable, Codable {
     }
 
     var isAudioOnly: Bool {
-        videoURL.isStandaloneAudioFile
+        isTextOnly == false && videoURL.isStandaloneAudioFile
+    }
+
+    var mediaFileExists: Bool {
+        isTextOnly || FileManager.default.fileExists(atPath: videoURL.path)
     }
 
     var durationText: String {
-        let totalSeconds = max(Int((duration ?? 0).rounded(.down)), 0)
+        let fallbackDuration = segments.map(\.endTime).max() ?? 0
+        let totalSeconds = max(Int((duration ?? fallbackDuration).rounded(.down)), 0)
         let minutes = totalSeconds / 60
         let seconds = totalSeconds % 60
         return String(format: "%d:%02d", minutes, seconds)

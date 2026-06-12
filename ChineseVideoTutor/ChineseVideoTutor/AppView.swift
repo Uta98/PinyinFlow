@@ -637,6 +637,7 @@ private struct FavoritesHomeView: View {
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
     @State private var searchText = ""
+    private let nativeAdUnitID = AdMobAdUnits.native
 
     private var query: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -665,7 +666,11 @@ private struct FavoritesHomeView: View {
 
                     SearchField(text: $searchText)
 
-                    FavoriteSubtitleList(results: favoriteResults, textScale: textScale) { result in
+                    FavoriteSubtitleList(
+                        results: favoriteResults,
+                        textScale: textScale,
+                        nativeAdUnitID: nativeAdUnitID
+                    ) { result in
                         openSession(result.session, result.segment.startTime)
                     } toggleFavorite: { result in
                         toggleFavorite(result.session.id, result.segment.id)
@@ -683,6 +688,7 @@ private struct FavoritesHomeView: View {
 private struct FavoriteSubtitleList: View {
     let results: [FavoriteSubtitleResult]
     let textScale: Double
+    let nativeAdUnitID: String
     let open: (FavoriteSubtitleResult) -> Void
     let toggleFavorite: (FavoriteSubtitleResult) -> Void
 
@@ -696,15 +702,30 @@ private struct FavoriteSubtitleList: View {
                 )
                 .padding(.top, 40)
             } else {
-                ForEach(results) { result in
+                ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
                     FavoriteSubtitleRow(result: result, textScale: textScale) {
                         open(result)
                     } toggleFavorite: {
                         toggleFavorite(result)
                     }
+
+                    if AdMobRuntime.adsDisabled == false, (index + 1).isMultiple(of: 4) {
+                        FavoriteNativeAdRow(adUnitID: nativeAdUnitID)
+                    }
                 }
             }
         }
+    }
+}
+
+private struct FavoriteNativeAdRow: View {
+    let adUnitID: String
+
+    var body: some View {
+        NativeAdCardView(adUnitID: adUnitID)
+            .frame(maxWidth: .infinity)
+            .frame(height: 132)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

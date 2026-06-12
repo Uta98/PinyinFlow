@@ -211,6 +211,19 @@ final class TranscriptionViewModel: ObservableObject {
     }
 
     func loadSession(_ session: TranscriptSession, startTime: TimeInterval? = nil) {
+        guard session.mediaFileExists else {
+            selectedVideoURL = nil
+            selectedVideoName = session.videoName
+            segments = session.segments
+            errorMessage = "保存済みの動画ファイルが見つかりません。開発ビルドからApp Store版へ入れ替えた場合や、アプリを削除して再インストールした場合、動画本体はiOSにより削除されることがあります。"
+            translationWarningMessage = nil
+            phase = .finished
+            activeSessionID = session.id
+            initialPlaybackTime = nil
+            isTextOnlySession = false
+            return
+        }
+
         selectedVideoURL = session.isTextOnly ? nil : session.videoURL
         selectedVideoName = session.videoName
         segments = session.segments
@@ -407,7 +420,7 @@ final class TranscriptionViewModel: ObservableObject {
 
         let session = TranscriptSession(
             videoName: selectedVideoName,
-            videoPath: selectedVideoURL.path,
+            videoPath: FileImporter.storagePath(for: selectedVideoURL),
             createdAt: Date(),
             duration: segments.map(\.endTime).max(),
             segments: segments
@@ -439,7 +452,6 @@ final class TranscriptionViewModel: ObservableObject {
         do {
             let data = try Data(contentsOf: historyURL)
             return try JSONDecoder().decode([TranscriptSession].self, from: data)
-                .filter { $0.isTextOnly || FileManager.default.fileExists(atPath: $0.videoPath) }
         } catch {
             return []
         }
@@ -455,13 +467,7 @@ final class TranscriptionViewModel: ObservableObject {
     }
 
     private static var historyURL: URL {
-        let documentsURL = try! FileManager.default.url(
-            for: .documentDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        return documentsURL.appendingPathComponent("TranscriptHistory.json")
+        return (try! FileImporter.documentsURL).appendingPathComponent("TranscriptHistory.json")
     }
 
     private static func normalizedLinkURL(from text: String) -> URL? {
