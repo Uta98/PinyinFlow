@@ -19,6 +19,8 @@ struct TranscriptWorkspaceView: View {
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
     @State private var hasRequestedProcessingInterstitial = false
+    @State private var isVideoChromeVisible = true
+    @State private var videoChromeHideTask: Task<Void, Never>?
     @StateObject private var interstitialPresenter = InterstitialAdPresenter()
     @Environment(\.colorScheme) private var colorScheme
 
@@ -57,12 +59,13 @@ struct TranscriptWorkspaceView: View {
                 )
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.appBackground)
         .tint(AppTheme.accent)
         .onAppear {
             pendingInitialSeek = viewModel.initialPlaybackTime
             configurePlayer(for: viewModel.selectedVideoURL)
             presentProcessingInterstitialIfNeeded()
+            revealVideoChrome()
         }
         .onChange(of: viewModel.selectedVideoURL) { _, url in
             configurePlayer(for: url)
@@ -75,9 +78,11 @@ struct TranscriptWorkspaceView: View {
             player?.defaultRate = Float(newValue)
             if player?.timeControlStatus == .playing {
                 player?.rate = Float(newValue)
+                scheduleVideoChromeHide()
             }
         }
         .onDisappear {
+            videoChromeHideTask?.cancel()
             removeTimeObserver()
         }
     }
@@ -123,6 +128,7 @@ struct TranscriptWorkspaceView: View {
             self.pendingInitialSeek = nil
         }
         nextPlayer.playImmediately(atRate: playerRate)
+        revealVideoChrome()
     }
 
     private func seek(to segment: TranscriptSegment) {
@@ -135,6 +141,7 @@ struct TranscriptWorkspaceView: View {
             toleranceAfter: .zero
         )
         player?.playImmediately(atRate: player?.defaultRate ?? playerRate)
+        revealVideoChrome()
     }
 
     private func toggleLoop(for segment: TranscriptSegment) {
@@ -194,7 +201,8 @@ struct TranscriptWorkspaceView: View {
             player: player,
             mediaURL: viewModel.selectedVideoURL,
             isTextOnly: viewModel.isTextOnlySession,
-            phase: viewModel.phase
+            phase: viewModel.phase,
+            revealControls: revealVideoChrome
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(videoPaneBackground)
@@ -210,6 +218,8 @@ struct TranscriptWorkspaceView: View {
             .buttonStyle(.plain)
             .padding(.top, isLandscape ? 12 : 52)
             .padding(.leading, 16)
+            .opacity(shouldShowVideoChrome ? 1 : 0)
+            .allowsHitTesting(shouldShowVideoChrome)
             .accessibilityLabel("履歴に戻る")
         }
         .overlay(alignment: .topTrailing) {
@@ -220,6 +230,8 @@ struct TranscriptWorkspaceView: View {
             )
             .padding(.top, isLandscape ? 12 : 52)
             .padding(.trailing, 16)
+            .opacity(shouldShowVideoChrome ? 1 : 0)
+            .allowsHitTesting(shouldShowVideoChrome)
         }
     }
 
@@ -261,10 +273,32 @@ struct TranscriptWorkspaceView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppTheme.appBackground)
     }
 
     private var videoPaneBackground: Color {
         colorScheme == .dark ? .black : AppTheme.appBackground
+    }
+
+    private var shouldShowVideoChrome: Bool {
+        player == nil || isVideoChromeVisible
+    }
+
+    private func revealVideoChrome() {
+        isVideoChromeVisible = true
+        scheduleVideoChromeHide()
+    }
+
+    private func scheduleVideoChromeHide() {
+        videoChromeHideTask?.cancel()
+        guard player != nil else { return }
+        videoChromeHideTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            guard player?.timeControlStatus == .playing else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isVideoChromeVisible = false
+            }
+        }
     }
 }
 
@@ -311,6 +345,7 @@ private struct VideoPane: View {
     let mediaURL: URL?
     let isTextOnly: Bool
     let phase: ProcessingPhase
+    let revealControls: () -> Void
 
     var body: some View {
         Group {
@@ -323,7 +358,7 @@ private struct VideoPane: View {
             } else if mediaURL?.isStandaloneAudioFile == true {
                 MediaIconPane(systemName: "waveform.circle.fill")
             } else if let player {
-                SystemVideoPlayer(player: player)
+                SystemVideoPlayer(player: player, revealControls: revealControls)
             } else {
                 MediaIconPane(systemName: "movie.badge.waveform")
             }
@@ -414,6 +449,11 @@ private struct MediaIconPane: View {
 
 private struct SystemVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer
+    let revealControls: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(revealControls: revealControls)
+    }
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
@@ -427,13 +467,42 @@ private struct SystemVideoPlayer: UIViewControllerRepresentable {
             AVPlaybackSpeed(rate: 2.0, localizedName: "2x")
         ]
         controller.player = player
+        let recognizer = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleTap)
+        )
+        recognizer.cancelsTouchesInView = false
+        controller.view.addGestureRecognizer(recognizer)
         return controller
     }
 
     func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
+        context.coordinator.revealControls = revealControls
         if controller.player !== player {
             controller.player = player
         }
+    }
+
+    final class Coordinator: NSObject {
+        var revealControls: () -> Void
+
+        init(revealControls: @escaping () -> Void) {
+            self.revealControls = revealControls
+        }
+
+        @objc func handleTap() {
+            revealControls()
+        }
+    }
+}
+
+private struct TranslationTopPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        guard next > 0 else { return }
+        value = next
     }
 }
 
@@ -540,36 +609,15 @@ private struct TranscriptSegmentRow: View {
     let toggleLoop: () -> Void
     let edit: () -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @State private var translationTop: CGFloat = 0
+
+    private var coordinateSpaceName: String {
+        "segment-row-\(segment.id.uuidString)"
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            VStack(spacing: 8) {
-                Button {
-                    toggleFavorite()
-                } label: {
-                    Image(systemName: segment.isFavorite ? "star.fill" : "star")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(segment.isFavorite ? .yellow : .secondary)
-                        .frame(width: 18, height: 22)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
-
-                Spacer(minLength: pinButtonTopSpacing)
-
-                Button {
-                    toggleLoop()
-                } label: {
-                    Image(systemName: isLooped ? "pin.fill" : "pin")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(isLooped ? AppTheme.accent : .secondary)
-                        .frame(width: 22, height: 24)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(isLooped ? "字幕ループを解除" : "この字幕をループ")
-            }
+            controlColumn
 
             Button {
                 seek()
@@ -592,14 +640,23 @@ private struct TranscriptSegmentRow: View {
                             .font(.system(size: 16 * textScale))
                             .foregroundStyle(colorScheme == .dark ? .white.opacity(0.86) : .secondary)
                             .textSelection(.enabled)
+                            .background {
+                                GeometryReader { proxy in
+                                    Color.clear.preference(
+                                        key: TranslationTopPreferenceKey.self,
+                                        value: proxy.frame(in: .named(coordinateSpaceName)).minY
+                                    )
+                                }
+                            }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
         }
+        .coordinateSpace(name: coordinateSpaceName)
         .padding(14)
-        .background(isActive ? AppTheme.accentSoft : Color(.systemGroupedBackground))
+        .background(isActive ? AppTheme.accentSoft : AppTheme.appBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
@@ -611,18 +668,52 @@ private struct TranscriptSegmentRow: View {
                     edit()
                 }
         )
+        .onPreferenceChange(TranslationTopPreferenceKey.self) { top in
+            guard top > 0 else { return }
+            translationTop = top
+        }
     }
 
-    private var pinButtonTopSpacing: CGFloat {
-        guard showPinyin || showChinese else { return 8 }
+    private var controlColumn: some View {
+        ZStack(alignment: .top) {
+            Button {
+                toggleFavorite()
+            } label: {
+                Image(systemName: segment.isFavorite ? "star.fill" : "star")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(segment.isFavorite ? .yellow : .secondary)
+                    .frame(width: 18, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(segment.isFavorite ? "お気に入りを解除" : "お気に入りに追加")
+
+            Button {
+                toggleLoop()
+            } label: {
+                Image(systemName: isLooped ? "pin.fill" : "pin")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(isLooped ? AppTheme.accent : .secondary)
+                    .frame(width: 22, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .offset(y: pinTopOffset)
+            .accessibilityLabel(isLooped ? "字幕ループを解除" : "この字幕をループ")
+        }
+        .frame(width: 24, alignment: .top)
+        .frame(minHeight: pinTopOffset + 24, alignment: .top)
+    }
+
+    private var pinTopOffset: CGFloat {
+        if showTranslation, segment.japaneseTranslation.isEmpty == false, translationTop > 0 {
+            return max(translationTop - 1, 28)
+        }
+        guard showPinyin || showChinese else { return 28 }
         if showPinyin && showChinese {
-            return CGFloat((isSingleLineCaption ? 34 : 54) * textScale)
+            return CGFloat(34 * textScale)
         }
         return CGFloat(30 * textScale)
-    }
-
-    private var isSingleLineCaption: Bool {
-        segment.pinyinTokens.count <= 10
     }
 }
 
