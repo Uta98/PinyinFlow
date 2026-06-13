@@ -265,7 +265,7 @@ struct TranscriptWorkspaceView: View {
     }
 
     private var videoPaneBackground: Color {
-        colorScheme == .dark ? .black : AppTheme.appBackground
+        AppTheme.appBackground
     }
 }
 
@@ -351,6 +351,7 @@ private struct ImagePane: View {
 
 private struct ProcessingMediaPane: View {
     let phase: ProcessingPhase
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 20) {
@@ -361,7 +362,7 @@ private struct ProcessingMediaPane: View {
             VStack(spacing: 10) {
                 Text("処理中")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(primaryTextColor)
 
                 VStack(spacing: 8) {
                     ProgressView(value: phase.progressValue)
@@ -371,11 +372,19 @@ private struct ProcessingMediaPane: View {
                     Text(phase.statusText)
                         .font(.subheadline)
                         .multilineTextAlignment(.center)
-                        .foregroundStyle(.white.opacity(0.68))
+                        .foregroundStyle(secondaryTextColor)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var primaryTextColor: Color {
+        colorScheme == .dark ? .white : AppTheme.titleAccent
+    }
+
+    private var secondaryTextColor: Color {
+        colorScheme == .dark ? .white.opacity(0.68) : .secondary
     }
 }
 
@@ -419,6 +428,7 @@ private struct SystemVideoPlayer: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
         controller.allowsPictureInPicturePlayback = false
+        controller.view.backgroundColor = AppTheme.appBackgroundUIColor
         controller.speeds = [
             AVPlaybackSpeed(rate: 0.5, localizedName: "0.5x"),
             AVPlaybackSpeed(rate: 0.75, localizedName: "0.75x"),
@@ -432,6 +442,7 @@ private struct SystemVideoPlayer: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
+        controller.view.backgroundColor = AppTheme.appBackgroundUIColor
         if controller.player !== player {
             controller.player = player
         }
