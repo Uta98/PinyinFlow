@@ -19,8 +19,6 @@ struct TranscriptWorkspaceView: View {
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
     @State private var hasRequestedProcessingInterstitial = false
-    @State private var isVideoChromeVisible = true
-    @State private var videoChromeHideTask: Task<Void, Never>?
     @StateObject private var interstitialPresenter = InterstitialAdPresenter()
     @Environment(\.colorScheme) private var colorScheme
 
@@ -65,7 +63,6 @@ struct TranscriptWorkspaceView: View {
             pendingInitialSeek = viewModel.initialPlaybackTime
             configurePlayer(for: viewModel.selectedVideoURL)
             presentProcessingInterstitialIfNeeded()
-            revealVideoChrome()
         }
         .onChange(of: viewModel.selectedVideoURL) { _, url in
             configurePlayer(for: url)
@@ -78,11 +75,9 @@ struct TranscriptWorkspaceView: View {
             player?.defaultRate = Float(newValue)
             if player?.timeControlStatus == .playing {
                 player?.rate = Float(newValue)
-                scheduleVideoChromeHide()
             }
         }
         .onDisappear {
-            videoChromeHideTask?.cancel()
             removeTimeObserver()
         }
     }
@@ -128,7 +123,6 @@ struct TranscriptWorkspaceView: View {
             self.pendingInitialSeek = nil
         }
         nextPlayer.playImmediately(atRate: playerRate)
-        revealVideoChrome()
     }
 
     private func seek(to segment: TranscriptSegment) {
@@ -141,7 +135,6 @@ struct TranscriptWorkspaceView: View {
             toleranceAfter: .zero
         )
         player?.playImmediately(atRate: player?.defaultRate ?? playerRate)
-        revealVideoChrome()
     }
 
     private func toggleLoop(for segment: TranscriptSegment) {
@@ -201,8 +194,7 @@ struct TranscriptWorkspaceView: View {
             player: player,
             mediaURL: viewModel.selectedVideoURL,
             isTextOnly: viewModel.isTextOnlySession,
-            phase: viewModel.phase,
-            revealControls: revealVideoChrome
+            phase: viewModel.phase
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(videoPaneBackground)
@@ -218,8 +210,6 @@ struct TranscriptWorkspaceView: View {
             .buttonStyle(.plain)
             .padding(.top, isLandscape ? 12 : 52)
             .padding(.leading, 16)
-            .opacity(shouldShowVideoChrome ? 1 : 0)
-            .allowsHitTesting(shouldShowVideoChrome)
             .accessibilityLabel("履歴に戻る")
         }
         .overlay(alignment: .topTrailing) {
@@ -230,8 +220,6 @@ struct TranscriptWorkspaceView: View {
             )
             .padding(.top, isLandscape ? 12 : 52)
             .padding(.trailing, 16)
-            .opacity(shouldShowVideoChrome ? 1 : 0)
-            .allowsHitTesting(shouldShowVideoChrome)
         }
     }
 
@@ -279,27 +267,6 @@ struct TranscriptWorkspaceView: View {
     private var videoPaneBackground: Color {
         colorScheme == .dark ? .black : AppTheme.appBackground
     }
-
-    private var shouldShowVideoChrome: Bool {
-        player == nil || isVideoChromeVisible
-    }
-
-    private func revealVideoChrome() {
-        isVideoChromeVisible = true
-        scheduleVideoChromeHide()
-    }
-
-    private func scheduleVideoChromeHide() {
-        videoChromeHideTask?.cancel()
-        guard player != nil else { return }
-        videoChromeHideTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(3))
-            guard player?.timeControlStatus == .playing else { return }
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isVideoChromeVisible = false
-            }
-        }
-    }
 }
 
 private struct SubtitleDisplayMenu: View {
@@ -345,7 +312,6 @@ private struct VideoPane: View {
     let mediaURL: URL?
     let isTextOnly: Bool
     let phase: ProcessingPhase
-    let revealControls: () -> Void
 
     var body: some View {
         Group {
@@ -358,7 +324,7 @@ private struct VideoPane: View {
             } else if mediaURL?.isStandaloneAudioFile == true {
                 MediaIconPane(systemName: "waveform.circle.fill")
             } else if let player {
-                SystemVideoPlayer(player: player, revealControls: revealControls)
+                SystemVideoPlayer(player: player)
             } else {
                 MediaIconPane(systemName: "movie.badge.waveform")
             }
@@ -449,11 +415,6 @@ private struct MediaIconPane: View {
 
 private struct SystemVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer
-    let revealControls: () -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(revealControls: revealControls)
-    }
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
@@ -467,31 +428,12 @@ private struct SystemVideoPlayer: UIViewControllerRepresentable {
             AVPlaybackSpeed(rate: 2.0, localizedName: "2x")
         ]
         controller.player = player
-        let recognizer = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleTap)
-        )
-        recognizer.cancelsTouchesInView = false
-        controller.view.addGestureRecognizer(recognizer)
         return controller
     }
 
     func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
-        context.coordinator.revealControls = revealControls
         if controller.player !== player {
             controller.player = player
-        }
-    }
-
-    final class Coordinator: NSObject {
-        var revealControls: () -> Void
-
-        init(revealControls: @escaping () -> Void) {
-            self.revealControls = revealControls
-        }
-
-        @objc func handleTap() {
-            revealControls()
         }
     }
 }
