@@ -20,6 +20,7 @@ struct TranscriptWorkspaceView: View {
     @State private var editingSegment: TranscriptSegment?
     @State private var hasRequestedProcessingInterstitial = false
     @StateObject private var interstitialPresenter = InterstitialAdPresenter()
+    @Environment(\.colorScheme) private var colorScheme
 
     private var playerRate: Float {
         Float(playbackRate)
@@ -196,7 +197,7 @@ struct TranscriptWorkspaceView: View {
             phase: viewModel.phase
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.black)
+        .background(videoPaneBackground)
         .overlay(alignment: .topLeading) {
             Button {
                 viewModel.showHome()
@@ -260,6 +261,10 @@ struct TranscriptWorkspaceView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var videoPaneBackground: Color {
+        colorScheme == .dark ? .black : AppTheme.appBackground
     }
 }
 
@@ -328,6 +333,7 @@ private struct VideoPane: View {
 
 private struct ImagePane: View {
     let url: URL
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         if let image = UIImage(contentsOfFile: url.path) {
@@ -335,7 +341,7 @@ private struct ImagePane: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.black)
+                .background(colorScheme == .dark ? .black : AppTheme.appBackground)
         } else {
             MediaIconPane(systemName: "photo")
         }

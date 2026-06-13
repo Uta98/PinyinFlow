@@ -343,7 +343,6 @@ private struct ImportHomeView: View {
     @State private var sessionPendingDeletion: TranscriptSession?
 
     private let nativeAdUnitID = AdMobAdUnits.native
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     private var query: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -364,67 +363,69 @@ private struct ImportHomeView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                HomeHeaderView(
-                    importFile: importFile,
-                    importPhoto: importPhoto,
-                    importText: importText
-                )
-
-                SearchField(text: $searchText)
-
-                if history.isEmpty {
-                    ContentUnavailableView(
-                        "履歴はまだありません",
-                        systemImage: "clock",
-                        description: Text("取り込んだ動画、音声、画像、テキストと字幕はここに保存されます。")
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    HomeHeaderView(
+                        importFile: importFile,
+                        importPhoto: importPhoto,
+                        importText: importText
                     )
-                    .padding(.top, 40)
-                } else if query.isEmpty {
-                    LazyVGrid(columns: columns, spacing: 10) {
-                        ForEach(Array(history.enumerated()), id: \.element.id) { index, session in
-                            HistoryTile(session: session) {
-                                openSession(session, nil)
-                            }
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    sessionPendingDeletion = session
-                                } label: {
-                                    Label("削除", systemImage: "trash")
-                                }
-                            }
 
-                            if AdMobRuntime.adsDisabled == false, (index + 1).isMultiple(of: 5) {
-                                NativeAdHistoryTile(adUnitID: nativeAdUnitID)
-                            }
-                        }
-                    }
-                } else {
-                    LazyVStack(spacing: 10) {
-                        if searchResults.isEmpty {
-                            ContentUnavailableView.search(text: query)
-                                .padding(.top, 40)
-                        } else {
-                            ForEach(searchResults) { result in
-                                SearchResultRow(result: result, query: query) {
-                                    openSession(result.session, result.segment.startTime)
+                    SearchField(text: $searchText)
+
+                    if history.isEmpty {
+                        ContentUnavailableView(
+                            "履歴はまだありません",
+                            systemImage: "clock",
+                            description: Text("取り込んだ動画、音声、画像、テキストと字幕はここに保存されます。")
+                        )
+                        .padding(.top, 40)
+                    } else if query.isEmpty {
+                        LazyVGrid(columns: columns(for: proxy.size), spacing: 10) {
+                            ForEach(Array(history.enumerated()), id: \.element.id) { index, session in
+                                HistoryTile(session: session) {
+                                    openSession(session, nil)
                                 }
                                 .contextMenu {
                                     Button(role: .destructive) {
-                                        sessionPendingDeletion = result.session
+                                        sessionPendingDeletion = session
                                     } label: {
                                         Label("削除", systemImage: "trash")
+                                    }
+                                }
+
+                                if AdMobRuntime.adsDisabled == false, (index + 1).isMultiple(of: 5) {
+                                    NativeAdHistoryTile(adUnitID: nativeAdUnitID)
+                                }
+                            }
+                        }
+                    } else {
+                        LazyVStack(spacing: 10) {
+                            if searchResults.isEmpty {
+                                ContentUnavailableView.search(text: query)
+                                    .padding(.top, 40)
+                            } else {
+                                ForEach(searchResults) { result in
+                                    SearchResultRow(result: result, query: query) {
+                                        openSession(result.session, result.segment.startTime)
+                                    }
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            sessionPendingDeletion = result.session
+                                        } label: {
+                                            Label("削除", systemImage: "trash")
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+                .padding()
             }
-            .padding()
+            .background(AppTheme.appBackground)
         }
-        .background(AppTheme.appBackground)
         .alert("動画を削除しますか？", isPresented: Binding(
             get: { sessionPendingDeletion != nil },
             set: { isPresented in
@@ -445,6 +446,13 @@ private struct ImportHomeView: View {
         } message: {
             Text("保存済みの動画と字幕を履歴から削除します。")
         }
+    }
+
+    private func columns(for size: CGSize) -> [GridItem] {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let isLandscape = size.width > size.height
+        let count = (isPad || isLandscape) ? 6 : 3
+        return Array(repeating: GridItem(.flexible(), spacing: 10), count: count)
     }
 }
 
@@ -654,7 +662,7 @@ private struct FavoritesHomeView: View {
     let openSession: (TranscriptSession, TimeInterval?) -> Void
     let toggleFavorite: (TranscriptSession.ID, TranscriptSegment.ID) -> Void
     @State private var searchText = ""
-    private let nativeAdUnitID = AdMobAdUnits.native
+    private let nativeAdUnitID = AdMobAdUnits.favoriteNative
 
     private var query: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -38,10 +38,12 @@ enum AdMobAdUnits {
     static let banner = "ca-app-pub-3940256099942544/2934735716"
     static let interstitial = "ca-app-pub-3940256099942544/4411468910"
     static let native = "ca-app-pub-3940256099942544/3986624511"
+    static let favoriteNative = "ca-app-pub-3940256099942544/3986624511"
     #else
     static let banner = "ca-app-pub-2083362073572230/5681513186"
     static let interstitial = "ca-app-pub-2083362073572230/6597316054"
     static let native = "ca-app-pub-2083362073572230/9031907705"
+    static let favoriteNative = "ca-app-pub-2083362073572230/4265444991"
     #endif
 }
 
