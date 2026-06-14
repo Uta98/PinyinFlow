@@ -66,18 +66,17 @@ struct AppView: View {
     @AppStorage("translation.targetLanguage") private var translationTarget = TranslationTargetLanguage.japanese.rawValue
     @AppStorage("transcription.engine") private var transcriptionEngine = "whisperkit"
     @AppStorage("transcript.textScale") private var textScale = 1.0
-    @AppStorage("subtitle.showPinyin") private var showSubtitlePinyin = true
-    @AppStorage("subtitle.showChinese") private var showSubtitleChinese = true
-    @AppStorage("subtitle.showTranslation") private var showSubtitleTranslation = true
     @AppStorage("player.playbackRate") private var playbackRate = 1.0
     @AppStorage("player.subtitleLoopPause") private var subtitleLoopPause = 0.4
     @AppStorage("onboarding.privacyAccepted") private var privacyAccepted = false
+    @AppStorage("translation.prewarmed.zhHans.ja") private var didPrewarmJapaneseTranslation = false
     @State private var isShowingTextSheet = false
     @State private var isShowingPhotoPicker = false
     @State private var isImportingVideo = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var inputText = ""
     @State private var homeSearchText = ""
+    @State private var didStartTranslationPrewarm = false
 
     var body: some View {
         Group {
@@ -146,10 +145,7 @@ struct AppView: View {
                     viewModel: viewModel,
                     textScale: textScale,
                     playbackRate: $playbackRate,
-                    loopPauseDuration: subtitleLoopPause,
-                    showPinyin: $showSubtitlePinyin,
-                    showChinese: $showSubtitleChinese,
-                    showTranslation: $showSubtitleTranslation
+                    loopPauseDuration: subtitleLoopPause
                 )
             }
         }
@@ -210,6 +206,7 @@ struct AppView: View {
             configurePlaybackAudioSession()
             configureViewModelServices()
             processPendingIntentImageIfNeeded()
+            prewarmJapaneseTranslationIfNeeded()
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
@@ -300,6 +297,23 @@ struct AppView: View {
         guard let url = PendingScreenshotImportStore.consumePendingURL() else { return }
         Task {
             await viewModel.importImageFromIntent(url: url)
+        }
+    }
+
+    private func prewarmJapaneseTranslationIfNeeded() {
+        guard didPrewarmJapaneseTranslation == false, didStartTranslationPrewarm == false else { return }
+        didStartTranslationPrewarm = true
+        Task {
+            guard #available(iOS 18.0, *) else { return }
+            do {
+                _ = try await AppleTranslationRequestCenter.shared.translate(
+                    ["你好"],
+                    targetLanguage: .japanese
+                )
+                didPrewarmJapaneseTranslation = true
+            } catch {
+                didStartTranslationPrewarm = false
+            }
         }
     }
 }

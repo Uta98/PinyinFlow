@@ -6,9 +6,6 @@ struct TranscriptWorkspaceView: View {
     let textScale: Double
     @Binding var playbackRate: Double
     let loopPauseDuration: Double
-    @Binding var showPinyin: Bool
-    @Binding var showChinese: Bool
-    @Binding var showTranslation: Bool
     @State private var player: AVPlayer?
     @State private var timeObserver: Any?
     @State private var currentTime: TimeInterval = 0
@@ -19,6 +16,8 @@ struct TranscriptWorkspaceView: View {
     @State private var pendingInitialSeek: TimeInterval?
     @State private var editingSegment: TranscriptSegment?
     @State private var hasRequestedProcessingInterstitial = false
+    @State private var subtitleDisplay = SubtitleDisplaySettings()
+    @State private var subtitleDisplayByWorkspaceID: [String: SubtitleDisplaySettings] = [:]
     @StateObject private var interstitialPresenter = InterstitialAdPresenter()
     @Environment(\.colorScheme) private var colorScheme
 
@@ -61,11 +60,16 @@ struct TranscriptWorkspaceView: View {
         .tint(AppTheme.accent)
         .onAppear {
             pendingInitialSeek = viewModel.initialPlaybackTime
+            loadSubtitleDisplayForCurrentWorkspace()
             configurePlayer(for: viewModel.selectedVideoURL)
             presentProcessingInterstitialIfNeeded()
         }
         .onChange(of: viewModel.selectedVideoURL) { _, url in
+            loadSubtitleDisplayForCurrentWorkspace()
             configurePlayer(for: url)
+        }
+        .onChange(of: viewModel.activeSessionID) { _, _ in
+            loadSubtitleDisplayForCurrentWorkspace()
         }
         .onChange(of: viewModel.phase) { _, _ in
             configurePlayer(for: viewModel.selectedVideoURL)
@@ -214,9 +218,7 @@ struct TranscriptWorkspaceView: View {
         }
         .overlay(alignment: .topTrailing) {
             SubtitleDisplayMenu(
-                showPinyin: $showPinyin,
-                showChinese: $showChinese,
-                showTranslation: $showTranslation
+                display: subtitleDisplayBinding
             )
             .padding(.top, isLandscape ? 12 : 52)
             .padding(.trailing, 16)
@@ -248,9 +250,9 @@ struct TranscriptWorkspaceView: View {
                 loopedSegmentID: loopedSegmentID,
                 textScale: textScale,
                 phase: viewModel.phase,
-                showPinyin: showPinyin,
-                showChinese: showChinese,
-                showTranslation: showTranslation,
+                showPinyin: subtitleDisplay.showPinyin,
+                showChinese: subtitleDisplay.showChinese,
+                showTranslation: subtitleDisplay.showTranslation,
                 seek: seek(to:),
                 toggleFavorite: { segment in
                     viewModel.toggleFavorite(segmentID: segment.id)
@@ -267,16 +269,45 @@ struct TranscriptWorkspaceView: View {
     private var videoPaneBackground: Color {
         AppTheme.appBackground
     }
+
+    private var subtitleDisplayBinding: Binding<SubtitleDisplaySettings> {
+        Binding {
+            subtitleDisplay
+        } set: { newValue in
+            var transaction = Transaction()
+            transaction.animation = nil
+            withTransaction(transaction) {
+                subtitleDisplay = newValue
+            }
+            subtitleDisplayByWorkspaceID[subtitleDisplayWorkspaceID] = newValue
+        }
+    }
+
+    private var subtitleDisplayWorkspaceID: String {
+        if let activeSessionID = viewModel.activeSessionID {
+            return "session-\(activeSessionID.uuidString)"
+        }
+        if let selectedVideoURL = viewModel.selectedVideoURL {
+            return "media-\(selectedVideoURL.path)"
+        }
+        return viewModel.isTextOnlySession ? "text-\(viewModel.selectedVideoName ?? "current")" : "transient"
+    }
+
+    private func loadSubtitleDisplayForCurrentWorkspace() {
+        let workspaceID = subtitleDisplayWorkspaceID
+        subtitleDisplay = subtitleDisplayByWorkspaceID[workspaceID] ?? SubtitleDisplaySettings()
+    }
 }
 
 private struct SubtitleDisplayMenu: View {
-    @Binding var showPinyin: Bool
-    @Binding var showChinese: Bool
-    @Binding var showTranslation: Bool
+    @Binding var display: SubtitleDisplaySettings
     @State private var isShowingPanel = false
+    @State private var draftDisplay = SubtitleDisplaySettings()
+    @State private var applyTask: Task<Void, Never>?
 
     var body: some View {
         Button {
+            draftDisplay = display
             isShowingPanel = true
         } label: {
             Image(systemName: "captions.bubble")
@@ -291,11 +322,11 @@ private struct SubtitleDisplayMenu: View {
                 Text("字幕表示")
                     .font(.headline)
 
-                Toggle("拼音", isOn: $showPinyin)
+                Toggle("拼音", isOn: draftBinding(\.showPinyin))
                     .tint(AppTheme.settingsAccent)
-                Toggle("中国語", isOn: $showChinese)
+                Toggle("中国語", isOn: draftBinding(\.showChinese))
                     .tint(AppTheme.settingsAccent)
-                Toggle("日本語訳", isOn: $showTranslation)
+                Toggle("日本語訳", isOn: draftBinding(\.showTranslation))
                     .tint(AppTheme.settingsAccent)
             }
             .padding(16)
@@ -304,7 +335,39 @@ private struct SubtitleDisplayMenu: View {
             .presentationCompactAdaptation(.popover)
             .presentationBackground(AppTheme.settingsRowBackground)
         }
+        .onChange(of: display) { _, newValue in
+            guard isShowingPanel == false else { return }
+            draftDisplay = newValue
+        }
+        .onDisappear {
+            applyTask?.cancel()
+        }
     }
+
+    private func draftBinding(_ keyPath: WritableKeyPath<SubtitleDisplaySettings, Bool>) -> Binding<Bool> {
+        Binding {
+            draftDisplay[keyPath: keyPath]
+        } set: { newValue in
+            draftDisplay[keyPath: keyPath] = newValue
+            scheduleApply()
+        }
+    }
+
+    private func scheduleApply() {
+        applyTask?.cancel()
+        let nextDisplay = draftDisplay
+        applyTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(160))
+            guard Task.isCancelled == false else { return }
+            display = nextDisplay
+        }
+    }
+}
+
+private struct SubtitleDisplaySettings: Equatable {
+    var showPinyin = true
+    var showChinese = true
+    var showTranslation = true
 }
 
 private struct VideoPane: View {
